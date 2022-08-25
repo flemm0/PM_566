@@ -2,14 +2,8 @@
 title: "Lab 01: Hello R"
 author: "Flemming Wu"
 date: "8/24/2022"
-output: 
-  html_document: 
-    toc: yes
-    toc_float: yes
-    fig_width: 3
-    fig_height: 3
-    highlight: tango
-    theme: yeti
+output: github_document
+
 ---
 
 ```{r setup, include=FALSE}
