@@ -1,0 +1,180 @@
+---
+title: "Lab 03 - Exploratory Data Analysis"
+author: "Flemming Wu"
+date: "09/07/2022"
+output: github_document
+always_allow_html: true
+
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Steps
+
+### 1. Read in the data
+```{r, message = FALSE}
+if(!file.exists("met_all.gz")){
+  download.file("https://raw.githubusercontent.com/USCbiostats/data-science-data/master/02_met/met_all.gz", "met_all.gz", method="libcurl", timeout = 60)
+}
+met <- data.table::fread("met_all.gz")
+```
+
+### 2. Check the dimensions, headers, footers. How many columns, rows are there?
+```{r, check dimensions}
+dim(met)
+```
+There are 2,377,343 million rows/observations, and 30 columns/variables
+
+```{r, check head}
+head(met)
+```
+```{r, check tail}
+tail(met)
+```
+
+### 3. Take a look at the variables.
+
+```{r}
+str(met)
+```
+
+### 4. Take a closer look at the key variables.
+
+```{r}
+table(met$year)
+```
+
+```{r}
+table(met$day)
+```
+
+```{r}
+table(met$hour)
+```
+
+```{r}
+summary(met$temp)
+```
+Improbable low minimum temperature value.
+
+```{r}
+summary(met$elev)
+```
+The 9999 variable for the max probably indicates missing value(s).
+
+```{r}
+summary(met$wind.sp)
+```
+Lots of missing data.
+
+##### Replace 9999 elevation data with appropriate representation.
+```{r}
+met[met$elev==9999.0] <- NA
+summary(met$elev)
+```
+The elevation at the highest weather station is 4113.
+
+##### Remove -40 degree temperature observations
+```{r}
+met <- met[met$temp > -40]
+met2 <- met[order(temp)]
+head(met2)
+```
+The -17.2 temp observation also seems sus.
+
+
+### 5. Check the data against an external data source.
+
+##### Remove the -17.2 observation.
+```{r}
+met <- met[met$temp>-15]
+met2 <- met[order(temp)]
+head(met2)
+```
+```{r}
+summary(met$temp)
+```
+Minimum temp of -3 degrees Celsius (~27 degrees Fahrenheit) is reasonable.
+
+### 6. Calculate summary statistics
+
+##### Examine windspeed and temperature for station with maximum elevation.
+##### Select the weather station with maximum elevation; look at the correlation between temperature and wind speed; look at the correlation between temperature and wind speed with hour and day of the month.
+
+```{r}
+elev <- met[met$elev==max(elev)]
+summary(elev)
+```
+```{r}
+cor(elev$temp, elev$wind.sp, use="complete")
+```
+```{r}
+cor(elev$temp, elev$hour, use="complete")
+```
+```{r}
+cor(elev$wind.sp, elev$day, use="complete")
+```
+```{r}
+cor(elev$wind.sp, elev$hour, use="complete")
+```
+```{r}
+cor(elev$temp, elev$day, use="complete")
+```
+
+### 7. Exploratory graphs
+
+```{r}
+hist(met$elev, breaks=100)
+```
+Skewed right, with few elevation observations above 2000 meters.
+
+```{r}
+hist(met$temp)
+```
+```{r}
+hist(met$wind.sp)
+```
+This data is also skewed, may help to transform it for later analyses.
+
+```{r, Loading in leaflet, message = FALSE}
+if(!require(leaflet)){
+  install.packages("leaflet")
+}
+
+library(leaflet)
+```
+
+```{r}
+leaflet(elev) %>%
+  addProviderTiles("OpenStreetMap") %>%
+  addCircles(lat=~lat, lng=~lon, opacity=1, fillOpacity=1, radius=100)
+```
+
+##### Look at time series of temperature and wind speed. Create date-time variable for x-axis.
+
+```{r, message = FALSE}
+if(!require(lubridate)){
+  install.packages("lubridate")
+}
+library(lubridate)
+```
+
+```{r, create new date column}
+elev$date <- with(elev, ymd_h(paste(year, month, day, hour, sep= ' ')))
+summary(elev$date)
+```
+```{r}
+elev <- elev[order(date)]
+head(elev)
+```
+```{r, plotting temperature vs date}
+plot(elev$date, elev$temp, type="l")
+```
+The temperature seems to fluctuate between 4 and 12.
+
+```{r, plotting wind speed vs date}
+plot(elev$date, elev$wind.sp, type="l")
+```
+
