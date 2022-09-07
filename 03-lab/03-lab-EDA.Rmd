@@ -1,0 +1,51 @@
+---
+title: "Lab 03 - Exploratory Data Analysis"
+author: "Flemming Wu"
+date: "2022-09-03"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Steps
+
+### 1. Read in the data
+```{r, message = FALSE}
+#download.file("https://raw.githubusercontent.com/USCbiostats/data-science-data/master/02_met/met_all.gz", "met_all.gz", method="libcurl", timeout = 60)
+met <- data.table::fread("met_all.gz")
+```
+
+### 2. Check the dimensions, headers, footers. How many columns, rows are there?
+```{r}
+dim(met)
+```
+
+```{r}
+head(met)
+```
+```{r}
+tail(met)
+```
+```{r}
+
+```
+
+
+### 3. Take a look at the variables.
+
+
+### 4. Take a closer look at the key variables.
+
+
+
+### 5. Check the data against an external data source.
+
+
+
+### 6. Calculate summary statistics
+
+
+
+### 7. Exploratory graphs
