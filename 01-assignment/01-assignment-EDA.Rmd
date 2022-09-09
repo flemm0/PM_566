@@ -13,6 +13,7 @@ setwd("~/Desktop/PM566/GitHub/01-assignment")
 
 ```{r, message = FALSE}
 library(dplyr)
+library(leaflet)
 ```
 
 
@@ -141,6 +142,11 @@ df_all <- df_all[order(df_all$PM2.5Concentration)] #Ascending order by PM 2.5
 
 ##### 3. Create a basic map in leaflet() that shows the locations of the sites (make sure to use different colors for each year). Summarize the spatial distribution of the monitoring sites.
 
+```{r}
+leaflet(df_all) %>%
+  addProviderTiles('OpenStreetMap') %>%
+  addCircles(lat=~SITE_LATITUDE,lng=~SITE_LONGITUDE, opacity=1, fillOpacity=1, radius=100)
+```
 
 
 
