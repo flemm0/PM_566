@@ -136,28 +136,66 @@ df_all <- df_all[order(df_all$PM2.5Concentration)] #Ascending order by PM 2.5
 
 ```
 
-
-
-
-
-##### 3. Create a basic map in leaflet() that shows the locations of the sites (make sure to use different colors for each year). Summarize the spatial distribution of the monitoring sites.
-
 ```{r}
-leaflet(df_all) %>%
-  addProviderTiles('OpenStreetMap') %>%
-  addCircles(lat=~SITE_LATITUDE,lng=~SITE_LONGITUDE, opacity=1, fillOpacity=1, radius=100)
+df_all
 ```
 
 
 
 
 
+##### 3. Create a basic map in leaflet() that shows the locations of the sites (make sure to use different colors for each year). Summarize the spatial distribution of the monitoring sites.
+
+```{r Plotting leaflet}
+
+pal <- colorFactor(
+  palette = c('red', 'blue'),
+  domain = df_all$year
+)
+
+leaflet(df_all) %>%
+  addProviderTiles('OpenStreetMap') %>%
+  addCircles(lat=~SITE_LATITUDE,lng=~SITE_LONGITUDE, color = ~pal(year))
+```
+
+
+
 ##### 4. Check for any missing or implausible values of PM in the combined dataset. Explore the proportions of each and provide a summary of any temporal patterns you see in these observations.
+
+```{r}
+sum(as.numeric(is.na(df_all$PM2.5Concentration)))
+```
+No missing values
+
+```{r}
+summary(df_all$PM2.5Concentration)
+```
+```{r View abnormally high concentrations}
+df_all %>%
+  filter(PM2.5Concentration == max(PM2.5Concentration))
+```
+
+
 
 ##### 5. Explore the main question of interest at three different spatial levels. Create exploratory plots (e.g. boxplots, histograms, line plots) and summary statistics that best suit each level of data. Be sure to write up explanations of what you observe in these data.
 
 
+```{r Boxplot of concentrations}
+boxplot(PM2.5Concentration ~ year, data = df_all, col = df_all$year)
+#Probably not the best option, as the data are highly skewed
+```
 
 
+```{r Histograms of concentrations}
+par(mfrow = c(2, 1), mar = c(2, 4, 2, 1))
+hist(subset(df_all, year == "2004")$PM2.5Concentration, col = "red", breaks = 200, main = "2004 PM 2.5 Concentration", xlab = "PM 2.5")
+abline(v = 65, lwd = 2)
+abline(v = median(subset(df_all, year == "2004")$PM2.5Concentration), lwd = 2, col = "purple")
+hist(subset(df_all, year == "2019")$PM2.5Concentration, col = "blue", breaks = 200, main = "2019 PM 2.5 Concentration", xlab = "PM 2.5")
+abline(v = 35, lwd = 2)
+abline(v = median(subset(df_all, year == "2019")$PM2.5Concentration), lwd = 2, col = "purple")
+
+
+```
 
 
