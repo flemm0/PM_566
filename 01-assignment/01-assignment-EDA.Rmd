@@ -103,13 +103,37 @@ filter(data_2004, Site.Name == "Kaiser Wilderness") %>%
 ```{r}
 data_2019 %>%
   filter(Daily.Mean.PM2.5.Concentration < 0) %>%
-  select(Daily.Mean.PM2.5.Concentration, Site.Name, CBSA_NAME)
+  select(Site.Name) %>%
+  unique()
+```
+```{r}
+quantile(data_2019$Daily.Mean.PM2.5.Concentration, seq(0, 1, 0.1))
 ```
 
 
 
 
 ##### 2. Combine the two years of data into one data frame. Use the Date variable to create a new column for year, which will serve as an identifier. Change the names of the key variables so that they are easier to refer to in your code.
+
+```{r Changing dates to datetime type and creating year column}
+data_2004 <- mutate(data_2004, Date = as.Date(Date, "%m/%d/%Y"))
+data_2004$year <- format(as.Date(data_2004$Date, format="%m/%d/%Y"),"%Y")
+
+
+data_2019 <- mutate(data_2019, Date = as.Date(Date, "%m/%d/%Y"))
+data_2019$year <- format(as.Date(data_2019$Date, format="%m/%d/%Y"),"%Y")
+```
+
+
+```{r Rbind to concatenate data frames and change column names}
+df_all <- rbind(data_2004, data_2019)
+
+names(df_all) <- make.names(names(df_all))
+names(df_all)[names(df_all) == "Daily.Mean.PM2.5.Concentration"] <- "PM2.5Concentration"
+
+df_all <- df_all[order(df_all$PM2.5Concentration)] #Ascending order by PM 2.5
+
+```
 
 
 
