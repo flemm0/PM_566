@@ -4,13 +4,20 @@ author: "Flemming Wu"
 date: "`r Sys.Date()`"
 output: github_document
 ---
+#### We will work with air pollution data from the U.S. Environmental Protection Agency (EPA). The primary question you will answer is whether daily concentrations of PM 2.5 (particulate matter air pollution with aerodynamic diameter less than 2.5 m) have decreased in California over the last 15 years (from 2004 to 2019).
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 setwd("~/Desktop/PM566/GitHub/01-assignment")
 ```
 
+```{r, message = FALSE}
+library(dplyr)
+```
+
+
 ##### 1. Read in the data using data.table(). For each of the two datasets, check the dimensions, headers, footers, variable names, and variable types. Check for any data issues, particularly in the key variable you are analyzing. Make sure you write up a summary of all of your findings.
+
 ```{r Downloading and reading in csv files, message=FALSE}
 if(!file.exists("data_2004.csv")){
   download.file("https://raw.githubusercontent.com/flemm0/PM_566/main/01-assignment/data_2004.csv", destfile = "data_2004.csv", method="libcurl", timeout = 60)
@@ -24,6 +31,103 @@ data_2004 <- data.table::fread("data_2004.csv")
 data_2019 <- data.table::fread("data_2019.csv")
 ```
 
-```{r}
-c("2004 dimensions: ", dim(data_2004), "2019 dimensions: ", dim(data_2019))
+```{r check dimensions}
+noquote(c("2004 dimensions: ", dim(data_2004)))
+noquote(c("2019 dimensions: ", dim(data_2019)))
 ```
+
+```{r check headers for 2004}
+head(data_2004)
+```
+```{r check tail for 2004}
+tail(data_2004)
+```
+```{r check header for 2019}
+head(data_2019)
+```
+```{r check tail for 2019}
+tail(data_2019)
+```
+
+```{r Check variables for 2004 data}
+str(data_2004)
+```
+
+```{r Check data types for 2019}
+str(data_2019)
+```
+It looks like some of the column names are separated by space, so will update them to be syntactically valid.
+```{r Update column names}
+names(data_2004) <- make.names(names(data_2004))
+names(data_2019) <- make.names(names(data_2019))
+
+```
+
+
+```{r Check PM 2.5 concentration values for 2004}
+summary(data_2004$Daily.Mean.PM2.5.Concentration)
+```
+```{r}
+table(data_2004$Daily.Mean.PM2.5.Concentration) %>% head()
+```
+```{r}
+table(data_2004$Daily.Mean.PM2.5.Concentration) %>% tail()
+
+```
+
+
+
+```{r Check PM 2.5 concentration values for 2019}
+summary(data_2019$Daily.Mean.PM2.5.Concentration)
+```
+```{r}
+table(data_2019$Daily.Mean.PM2.5.Concentration) %>% head()
+```
+```{r}
+table(data_2019$Daily.Mean.PM2.5.Concentration) %>% tail()
+```
+
+The EPA standard for PM 2.5 concentration post-1997 is 65 ug/m3 and was lowered to 35 ug/m3 since 2006.
+The negative concentrations of PM 2.5 as well as the very high maximums will be investigated.
+
+```{r Investigate negative PM 2.5 concentration value for 2004}
+data_2004 %>%
+  filter(Daily.Mean.PM2.5.Concentration < 0) %>%
+  select(Daily.Mean.PM2.5.Concentration, Site.Name, CBSA_NAME)
+```
+```{r}
+filter(data_2004, Site.Name == "Kaiser Wilderness") %>%
+  select(Daily.Mean.PM2.5.Concentration) %>%
+  table()
+```
+```{r}
+data_2019 %>%
+  filter(Daily.Mean.PM2.5.Concentration < 0) %>%
+  select(Daily.Mean.PM2.5.Concentration, Site.Name, CBSA_NAME)
+```
+
+
+
+
+##### 2. Combine the two years of data into one data frame. Use the Date variable to create a new column for year, which will serve as an identifier. Change the names of the key variables so that they are easier to refer to in your code.
+
+
+
+
+
+##### 3. Create a basic map in leaflet() that shows the locations of the sites (make sure to use different colors for each year). Summarize the spatial distribution of the monitoring sites.
+
+
+
+
+
+
+##### 4. Check for any missing or implausible values of PM in the combined dataset. Explore the proportions of each and provide a summary of any temporal patterns you see in these observations.
+
+##### 5. Explore the main question of interest at three different spatial levels. Create exploratory plots (e.g. boxplots, histograms, line plots) and summary statistics that best suit each level of data. Be sure to write up explanations of what you observe in these data.
+
+
+
+
+
+
