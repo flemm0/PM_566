@@ -1,5 +1,5 @@
 ---
-title: "Lab 01: Hello R"
+title: "Assignment 01: Exploratory Data Analysis"
 author: "Flemming Wu"
 date: "`r Sys.Date()`"
 output: github_document
@@ -12,9 +12,15 @@ knitr::opts_chunk$set(echo = TRUE)
 setwd("~/Desktop/PM566/GitHub/01-assignment")
 ```
 
+```{r}
+
+```
+
+
 ```{r, message = FALSE}
-library(dplyr)
+library(tidyverse)
 library(leaflet)
+library(webshot)
 ```
 
 
@@ -38,16 +44,13 @@ noquote(c("2004 dimensions: ", dim(data_2004)))
 noquote(c("2019 dimensions: ", dim(data_2019)))
 ```
 
-```{r check headers for 2004}
+```{r check head and tail for 2004}
 head(data_2004)
-```
-```{r check tail for 2004}
 tail(data_2004)
 ```
-```{r check header for 2019}
+
+```{r check head and tail for 2019}
 head(data_2019)
-```
-```{r check tail for 2019}
 tail(data_2019)
 ```
 
@@ -55,17 +58,16 @@ tail(data_2019)
 str(data_2004)
 ```
 
-```{r Check data types for 2019}
+```{r Check variables for 2019 data}
 str(data_2019)
 ```
 It looks like some of the column names are separated by space, so will update them to be syntactically valid.
 ```{r Update column names}
 names(data_2004) <- make.names(names(data_2004))
 names(data_2019) <- make.names(names(data_2019))
-
 ```
 
-
+Checking Key Variable: PM 2.5 Concentration
 ```{r Check PM 2.5 concentration values for 2004}
 summary(data_2004$Daily.Mean.PM2.5.Concentration)
 ```
@@ -161,7 +163,7 @@ leaflet(df_all) %>%
 
 
 
-##### 4. Check for any missing or implausible values of PM in the combined dataset. Explore the proportions of each and provide a summary of any temporal patterns you see in these observations.
+##### 4. Check for any missing or implausible values of PM 2.5 in the combined dataset. Explore the proportions of each and provide a summary of any temporal patterns you see in these observations.
 
 ```{r}
 sum(as.numeric(is.na(df_all$PM2.5Concentration)))
@@ -171,6 +173,17 @@ No missing values
 ```{r}
 summary(df_all$PM2.5Concentration)
 ```
+In the case of concentration of particulate matter in the air, it seems implausible to have a negative concentration. Remove these observations from the data.
+
+```{r View negative readings}
+df_all %>%
+  filter(PM2.5Concentration < 0) %>%
+  group_by(Site.Name, year) %>%
+  summarise(negative_readings = n()) %>%
+  arrange(desc(negative_readings))
+```
+
+
 ```{r View abnormally high concentrations}
 df_all %>%
   filter(PM2.5Concentration == max(PM2.5Concentration))
@@ -196,10 +209,15 @@ hist(subset(df_all, year == "2019")$PM2.5Concentration, col = "blue", breaks = 2
 abline(v = 35, lwd = 2)
 abline(v = median(subset(df_all, year == "2019")$PM2.5Concentration), lwd = 2, col = "purple")
 
-
+#Need to adjust the x-axis to be the same scale
 ```
 
-```{r}
+
+
+
+
+
+```{r, include = FALSE}
 wilcox.test(subset(df_all, year == "2004")$PM2.5Concentration, subset(df_all, year == "2019")$PM2.5Concentration)
 ```
 #At .05 significance level, we conclude that the PM2.5 concentrations in 2004 and 2019 from the data set are nonidentical populations.
