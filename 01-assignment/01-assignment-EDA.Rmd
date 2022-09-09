@@ -3,6 +3,7 @@ title: "Lab 01: Hello R"
 author: "Flemming Wu"
 date: "`r Sys.Date()`"
 output: github_document
+always_allow_html: true
 ---
 #### We will work with air pollution data from the U.S. Environmental Protection Agency (EPA). The primary question you will answer is whether daily concentrations of PM 2.5 (particulate matter air pollution with aerodynamic diameter less than 2.5 m) have decreased in California over the last 15 years (from 2004 to 2019).
 
@@ -198,4 +199,7 @@ abline(v = median(subset(df_all, year == "2019")$PM2.5Concentration), lwd = 2, c
 
 ```
 
-
+```{r}
+wilcox.test(subset(df_all, year == "2004")$PM2.5Concentration, subset(df_all, year == "2019")$PM2.5Concentration)
+```
+#At .05 significance level, we conclude that the PM2.5 concentrations in 2004 and 2019 from the data set are nonidentical populations.
