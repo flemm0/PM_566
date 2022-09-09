@@ -12,11 +12,6 @@ knitr::opts_chunk$set(echo = TRUE)
 setwd("~/Desktop/PM566/GitHub/01-assignment")
 ```
 
-```{r}
-
-```
-
-
 ```{r, message = FALSE}
 library(tidyverse)
 library(leaflet)
@@ -43,6 +38,10 @@ data_2019 <- data.table::fread("data_2019.csv")
 noquote(c("2004 dimensions: ", dim(data_2004)))
 noquote(c("2019 dimensions: ", dim(data_2019)))
 ```
+```{r Check how many more observations there are for 2019}
+dim(data_2019)[1]/dim(data_2004)[1]
+```
+There are almost 3 times as many observations for PM 2.5 concentration in 2019 compared to 2004.
 
 ```{r check head and tail for 2004}
 head(data_2004)
@@ -71,14 +70,17 @@ Checking Key Variable: PM 2.5 Concentration
 ```{r Check PM 2.5 concentration values for 2004}
 summary(data_2004$Daily.Mean.PM2.5.Concentration)
 ```
-```{r}
+Looks like some observations are below 0.
+
+```{r Check how many PM 2.5 concentration observations are below 0}
 table(data_2004$Daily.Mean.PM2.5.Concentration) %>% head()
 ```
-```{r}
-table(data_2004$Daily.Mean.PM2.5.Concentration) %>% tail()
+One observation for PM 2.5 concentration is negative.
 
+```{r Check the maximum values}
+quantile(data_2004$Daily.Mean.PM2.5.Concentration, seq(0, 1, 0.1))
 ```
-
+Looks like 10% of the data lie between concentration levels of 27 and 251.
 
 
 ```{r Check PM 2.5 concentration values for 2019}
@@ -87,32 +89,19 @@ summary(data_2019$Daily.Mean.PM2.5.Concentration)
 ```{r}
 table(data_2019$Daily.Mean.PM2.5.Concentration) %>% head()
 ```
-```{r}
-table(data_2019$Daily.Mean.PM2.5.Concentration) %>% tail()
-```
+Looks like 2019 has many more 2.5 concentration observations that are below 0.
 
-The EPA standard for PM 2.5 concentration post-1997 is 65 ug/m3 and was lowered to 35 ug/m3 since 2006.
-The negative concentrations of PM 2.5 as well as the very high maximums will be investigated.
-
-```{r Investigate negative PM 2.5 concentration value for 2004}
-data_2004 %>%
-  filter(Daily.Mean.PM2.5.Concentration < 0) %>%
-  select(Daily.Mean.PM2.5.Concentration, Site.Name, CBSA_NAME)
-```
-```{r}
-filter(data_2004, Site.Name == "Kaiser Wilderness") %>%
-  select(Daily.Mean.PM2.5.Concentration) %>%
-  table()
-```
-```{r}
-data_2019 %>%
-  filter(Daily.Mean.PM2.5.Concentration < 0) %>%
-  select(Site.Name) %>%
-  unique()
-```
 ```{r}
 quantile(data_2019$Daily.Mean.PM2.5.Concentration, seq(0, 1, 0.1))
 ```
+10% of the data lie between concentration levels of 14.2 and 120.9. Additionally, the maximum 2.5 concentration observation is less than half that of the 2004 data. This is plausible due to increase of effort to reduce air pollution levels.
+
+The EPA standard for PM 2.5 concentration post-1997 is 65 ug/m3 and was lowered to 35 ug/m3 since 2006.
+
+The negative PM 2.5 concentration levels pose a problem for answering the question and will be removed.
+
+
+
 
 
 
@@ -139,9 +128,6 @@ df_all <- df_all[order(df_all$PM2.5Concentration)] #Ascending order by PM 2.5
 
 ```
 
-```{r}
-df_all
-```
 
 
 

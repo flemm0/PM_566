@@ -39,6 +39,15 @@ noquote(c("2019 dimensions: ", dim(data_2019)))
     ## [1] 2019 dimensions:  53156             20
 
 ``` r
+dim(data_2019)[1]/dim(data_2004)[1]
+```
+
+    ## [1] 2.763791
+
+There are almost 3 times as many observations for PM 2.5 concentration
+in 2019 compared to 2004.
+
+``` r
 head(data_2004)
 ```
 
@@ -269,6 +278,8 @@ summary(data_2004$Daily.Mean.PM2.5.Concentration)
     ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
     ##   -0.10    6.00   10.10   13.13   16.30  251.00
 
+Looks like some observations are below 0.
+
 ``` r
 table(data_2004$Daily.Mean.PM2.5.Concentration) %>% head()
 ```
@@ -277,13 +288,17 @@ table(data_2004$Daily.Mean.PM2.5.Concentration) %>% head()
     ## -0.1    0  0.1  0.2  0.3  0.4 
     ##    1   11   15   20   27   32
 
+One observation for PM 2.5 concentration is negative.
+
 ``` r
-table(data_2004$Daily.Mean.PM2.5.Concentration) %>% tail()
+quantile(data_2004$Daily.Mean.PM2.5.Concentration, seq(0, 1, 0.1))
 ```
 
-    ## 
-    ## 102.1 110.4 122.5 148.4 170.4   251 
-    ##     1     1     1     1     1     1
+    ##    0%   10%   20%   30%   40%   50%   60%   70%   80%   90%  100% 
+    ##  -0.1   3.7   5.3   7.0   8.5  10.1  12.0  14.7  18.6  27.0 251.0
+
+Looks like 10% of the data lie between concentration levels of 27 and
+251.
 
 ``` r
 summary(data_2019$Daily.Mean.PM2.5.Concentration)
@@ -300,92 +315,8 @@ table(data_2019$Daily.Mean.PM2.5.Concentration) %>% head()
     ## -2.2   -2 -1.9 -1.8 -1.7 -1.6 
     ##    1   12   16   11   12   12
 
-``` r
-table(data_2019$Daily.Mean.PM2.5.Concentration) %>% tail()
-```
-
-    ## 
-    ##  91.1  97.3  98.9 103.5 104.5 120.9 
-    ##     1     1     1     1     1     1
-
-The EPA standard for PM 2.5 concentration post-1997 is 65 ug/m3 and was
-lowered to 35 ug/m3 since 2006. The negative concentrations of PM 2.5 as
-well as the very high maximums will be investigated.
-
-``` r
-data_2004 %>%
-  filter(Daily.Mean.PM2.5.Concentration < 0) %>%
-  select(Daily.Mean.PM2.5.Concentration, Site.Name, CBSA_NAME)
-```
-
-    ##    Daily.Mean.PM2.5.Concentration         Site.Name  CBSA_NAME
-    ## 1:                           -0.1 Kaiser Wilderness Fresno, CA
-
-``` r
-filter(data_2004, Site.Name == "Kaiser Wilderness") %>%
-  select(Daily.Mean.PM2.5.Concentration) %>%
-  table()
-```
-
-    ## Daily.Mean.PM2.5.Concentration
-    ## -0.1  0.1  0.2  0.3  0.4  0.5  0.6  0.8  0.9    1  1.1  1.3  1.4  1.5  1.6  1.7 
-    ##    1    3    3    3    4    4    4    3    3    4    4    2    2    1    1    1 
-    ##    2  2.1  2.2  2.4  2.5  2.6  2.7  2.8  2.9    3  3.1  3.2  3.3  3.5  3.6  3.7 
-    ##    1    1    2    1    1    2    3    3    1    1    1    1    1    3    3    1 
-    ##  3.8    4  4.1  4.2  4.3  4.4  4.6  4.7  4.8  4.9  5.1  5.3  5.4  5.5  5.7  5.8 
-    ##    2    3    1    2    1    1    2    1    1    1    3    1    1    1    2    2 
-    ##  5.9  6.3  6.4  6.5  6.8  6.9    7  7.9  8.3  8.4  8.5  9.4 
-    ##    1    4    2    1    1    1    1    1    1    1    1    1
-
-``` r
-data_2019 %>%
-  filter(Daily.Mean.PM2.5.Concentration < 0) %>%
-  select(Site.Name) %>%
-  unique()
-```
-
-    ##                                Site.Name
-    ##  1:                         Oakland West
-    ##  2:                        Laney College
-    ##  3:                    Chico-East Avenue
-    ##  4:                   Paradise - Theater
-    ##  5:                              Concord
-    ##  6:   Table Mountain Air Monitoring Site
-    ##  7:                                Huron
-    ##  8:                         Tranquillity
-    ##  9:                      Ridgecrest-Ward
-    ## 10:                                Lebec
-    ## 11:            Lancaster-Division Street
-    ## 12:                        Ukiah-Library
-    ## 13:   Willits-125 East Commercial Street
-    ## 14:                        Carmel Valley
-    ## 15:                            Salinas 3
-    ## 16:                        Auburn-Atwood
-    ## 17:                     Colfax-City Hall
-    ## 18:             Tahoe City-Fairway Drive
-    ## 19:                             Pechanga
-    ## 20:       Morongo Air Monitoring Station
-    ## 21:                             Rubidoux
-    ## 22:                        Lake Elsinore
-    ## 23:            Sacramento-Del Paso Manor
-    ## 24:                    Folsom-Natoma St.
-    ## 25:                          Sloughhouse
-    ## 26:                               Upland
-    ## 27:                       Camp Pendleton
-    ## 28:                              Manteca
-    ## 29:                    Arroyo Grande CDF
-    ## 30:                           Atascadero
-    ## 31:                         Redwood City
-    ## 32:                          Santa Maria
-    ## 33:                      Lompoc H Street
-    ## 34:                               Goleta
-    ## 35: Red Bluff-Walnut St. District Office
-    ## 36:               Weaverville-Courthouse
-    ## 37:                        Thousand Oaks
-    ## 38:                       Piru - Pacific
-    ## 39:           Simi Valley-Cochran Street
-    ## 40:            El Rio-Rio Mesa School #2
-    ##                                Site.Name
+Looks like 2019 has many more 2.5 concentration observations that are
+below 0.
 
 ``` r
 quantile(data_2019$Daily.Mean.PM2.5.Concentration, seq(0, 1, 0.1))
@@ -393,6 +324,17 @@ quantile(data_2019$Daily.Mean.PM2.5.Concentration, seq(0, 1, 0.1))
 
     ##    0%   10%   20%   30%   40%   50%   60%   70%   80%   90%  100% 
     ##  -2.2   2.3   3.5   4.5   5.5   6.5   7.7   9.1  10.9  14.2 120.9
+
+10% of the data lie between concentration levels of 14.2 and 120.9.
+Additionally, the maximum 2.5 concentration observation is less than
+half that of the 2004 data. This is plausible due to increase of effort
+to reduce air pollution levels.
+
+The EPA standard for PM 2.5 concentration post-1997 is 65 ug/m3 and was
+lowered to 35 ug/m3 since 2006.
+
+The negative PM 2.5 concentration levels pose a problem for answering
+the question and will be removed.
 
 ##### 2. Combine the two years of data into one data frame. Use the Date variable to create a new column for year, which will serve as an identifier. Change the names of the key variables so that they are easier to refer to in your code.
 
@@ -413,83 +355,6 @@ names(df_all)[names(df_all) == "Daily.Mean.PM2.5.Concentration"] <- "PM2.5Concen
 
 df_all <- df_all[order(df_all$PM2.5Concentration)] #Ascending order by PM 2.5
 ```
-
-``` r
-df_all
-```
-
-    ##              Date Source  Site.ID POC PM2.5Concentration    UNITS
-    ##     1: 2019-03-16    AQS 60130002   3               -2.2 ug/m3 LC
-    ##     2: 2019-03-02    AQS 60611004   3               -2.0 ug/m3 LC
-    ##     3: 2019-03-05    AQS 60611004   3               -2.0 ug/m3 LC
-    ##     4: 2019-03-06    AQS 60611004   3               -2.0 ug/m3 LC
-    ##     5: 2019-03-07    AQS 60611004   3               -2.0 ug/m3 LC
-    ##    ---                                                           
-    ## 72385: 2019-10-11    AQS 60371201   3              120.9 ug/m3 LC
-    ## 72386: 2004-07-21    AQS 60431001   3              122.5 ug/m3 LC
-    ## 72387: 2004-07-20    AQS 60431001   3              148.4 ug/m3 LC
-    ## 72388: 2004-07-19    AQS 60431001   3              170.4 ug/m3 LC
-    ## 72389: 2004-07-18    AQS 60431001   3              251.0 ug/m3 LC
-    ##        DAILY_AQI_VALUE                                  Site.Name
-    ##     1:               0                                    Concord
-    ##     2:               0                   Tahoe City-Fairway Drive
-    ##     3:               0                   Tahoe City-Fairway Drive
-    ##     4:               0                   Tahoe City-Fairway Drive
-    ##     5:               0                   Tahoe City-Fairway Drive
-    ##    ---                                                           
-    ## 72385:             185                                     Reseda
-    ## 72386:             186 Yosemite NP-Yosemite Village Vistor Center
-    ## 72387:             199 Yosemite NP-Yosemite Village Vistor Center
-    ## 72388:             221 Yosemite NP-Yosemite Village Vistor Center
-    ## 72389:             301 Yosemite NP-Yosemite Village Vistor Center
-    ##        DAILY_OBS_COUNT PERCENT_COMPLETE AQS_PARAMETER_CODE
-    ##     1:               1              100              88101
-    ##     2:               1              100              88502
-    ##     3:               1              100              88502
-    ##     4:               1              100              88502
-    ##     5:               1              100              88502
-    ##    ---                                                    
-    ## 72385:               1              100              88502
-    ## 72386:               1              100              88502
-    ## 72387:               1              100              88502
-    ## 72388:               1              100              88502
-    ## 72389:               1              100              88502
-    ##                            AQS_PARAMETER_DESC CBSA_CODE
-    ##     1:               PM2.5 - Local Conditions     41860
-    ##     2: Acceptable PM2.5 AQI & Speciation Mass     40900
-    ##     3: Acceptable PM2.5 AQI & Speciation Mass     40900
-    ##     4: Acceptable PM2.5 AQI & Speciation Mass     40900
-    ##     5: Acceptable PM2.5 AQI & Speciation Mass     40900
-    ##    ---                                                 
-    ## 72385: Acceptable PM2.5 AQI & Speciation Mass     31080
-    ## 72386: Acceptable PM2.5 AQI & Speciation Mass        NA
-    ## 72387: Acceptable PM2.5 AQI & Speciation Mass        NA
-    ## 72388: Acceptable PM2.5 AQI & Speciation Mass        NA
-    ## 72389: Acceptable PM2.5 AQI & Speciation Mass        NA
-    ##                                      CBSA_NAME STATE_CODE      STATE
-    ##     1:       San Francisco-Oakland-Hayward, CA          6 California
-    ##     2: Sacramento--Roseville--Arden-Arcade, CA          6 California
-    ##     3: Sacramento--Roseville--Arden-Arcade, CA          6 California
-    ##     4: Sacramento--Roseville--Arden-Arcade, CA          6 California
-    ##     5: Sacramento--Roseville--Arden-Arcade, CA          6 California
-    ##    ---                                                              
-    ## 72385:      Los Angeles-Long Beach-Anaheim, CA          6 California
-    ## 72386:                                                  6 California
-    ## 72387:                                                  6 California
-    ## 72388:                                                  6 California
-    ## 72389:                                                  6 California
-    ##        COUNTY_CODE       COUNTY SITE_LATITUDE SITE_LONGITUDE year
-    ##     1:          13 Contra Costa      37.93601      -122.0262 2019
-    ##     2:          61       Placer      39.16602      -120.1488 2019
-    ##     3:          61       Placer      39.16602      -120.1488 2019
-    ##     4:          61       Placer      39.16602      -120.1488 2019
-    ##     5:          61       Placer      39.16602      -120.1488 2019
-    ##    ---                                                           
-    ## 72385:          37  Los Angeles      34.19925      -118.5328 2019
-    ## 72386:          43     Mariposa      37.74871      -119.5871 2004
-    ## 72387:          43     Mariposa      37.74871      -119.5871 2004
-    ## 72388:          43     Mariposa      37.74871      -119.5871 2004
-    ## 72389:          43     Mariposa      37.74871      -119.5871 2004
 
 ##### 3. Create a basic map in leaflet() that shows the locations of the sites (make sure to use different colors for each year). Summarize the spatial distribution of the monitoring sites.
 
