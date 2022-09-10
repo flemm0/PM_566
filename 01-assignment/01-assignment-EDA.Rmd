@@ -9,6 +9,7 @@ always_allow_html: true
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(tidy.opts = list(width.cutoff = 60), tidy = TRUE)
 setwd("~/Desktop/PM566/GitHub/01-assignment")
 ```
 
@@ -162,7 +163,7 @@ summary(df_all$PM2.5Concentration)
 ```
 
 
-```{r View negative readings by year and location}
+```{r View negative readings by year and location, message=FALSE}
 df_all %>%
   filter(PM2.5Concentration < 0) %>%
   group_by(Site.Name, year) %>%
@@ -183,6 +184,32 @@ For measurements of __concentration__ of particulate matter in the air, it seems
 df_all <- df_all %>%
   filter(PM2.5Concentration > 0)
 ```
+
+```{r Check temporal patterns}
+
+require(gridExtra)
+
+p1 <- ggplot(data = filter(df_all, year == "2004")) +
+  geom_jitter(mapping = aes(x = Date, y = PM2.5Concentration), col = "red") +
+  geom_smooth(mapping = aes(x = Date, y = PM2.5Concentration), col = "black")
+
+p2 <- ggplot(data = filter(df_all, year == "2019")) +
+  geom_jitter(mapping = aes(x = Date, y = PM2.5Concentration), col = "blue") +
+  geom_smooth(mapping = aes(x = Date, y = PM2.5Concentration), col = "black") +
+  ylim(0, 250)
+
+grid.arrange(p1, p2, ncol=2)
+
+```
+The temporal patterns look similar in both years, with spikes in January, April, July, and at the end of the year starting in October.
+
+
+
+
+
+
+
+
 
 
 
@@ -218,30 +245,6 @@ ggplot(df_all, mapping = aes(x = COUNTY, y = PM2.5Concentration, color = year)) 
 
 
 
-DELETE PLOT BELOW
-```{r Zoom in on where the majority of the data lie}
-ggplot(df_all, mapping = aes(x = COUNTY, y = PM2.5Concentration, fill = year)) +
-  geom_boxplot(outlier.size = 0.01) +
-  theme(axis.text.x = element_text(angle=90, vjust=.5, hjust=1)) +
-  ylim(0, 25)
-```
-
-
-```{r Plot means of each county on scatterplot}
-county_averages <- df_all %>%
-  group_by(COUNTY, year) %>%
-  summarise_at(vars(PM2.5Concentration), list(Mean_PM2.5 = mean))
-  
-  
-ggplot(county_averages) +
-  geom_point(mapping = aes(x = COUNTY, y = Mean_PM2.5, color = year)) +
-  theme(axis.text.x = element_text(angle=90, vjust=.5, hjust=1))
-
-#Change to bar plot to better represent categorical x-axis variable. Make a box plots per county.
-```
-
-
-
 Look at sites in Los Angeles County.
 ```{r}
 filter(df_all, COUNTY == "Los Angeles") %>%
@@ -249,11 +252,28 @@ filter(df_all, COUNTY == "Los Angeles") %>%
   unique() %>%
   arrange(Site.Name)
 ```
+One of the sites is missing a name.
 
 
-```{r}
-filter(df_all, COUNTY == "Los Angeles") %>%
-  ggplot(mapping = aes(x = Site.Name, y = PM2.5Concentration, fill = year)) +
+```{r Validating Site Names}
+filter(df_all, COUNTY == "Los Angeles" & Site.Name == "") %>%
+  select(Site.Name, SITE_LATITUDE, SITE_LONGITUDE) %>% 
+  unique()
+```
+
+From looking at Google Maps and matching the latitude and longitude, it seems as though the coordinates 34.01407, -118.0606 are close to the Pico Rivera #2 site, leading me to suspect that the unnamed site is Pico Rivera #1.
+
+I validated this by checking the AQS website for a monitoring station at this location. https://epa.maps.arcgis.com/apps/webappviewer/index.html?id=5f239fd3e72f424f98ef3d5def547eb5&extent=-146.2334,13.1913,-46.3896,56.5319 The monitor is inactive now, but was active in 2004. Additionally, it wasn't given a site name, but the website says the city is "Pico Rivera". Will update this information in the data set to accurately reflect the site location.
+
+```{r Replacing empty site name with "Pico Rivera}
+
+df_la <- filter(df_all, COUNTY == "Los Angeles")
+df_la$Site.Name <- replace(df_la$Site.Name, df_la$Site.Name == "", "Pico Rivera")
+```
+
+
+```{r Plot data in Los Angeles County}
+ggplot(data = df_la, mapping = aes(x = Site.Name, y = PM2.5Concentration, fill = year)) +
   geom_boxplot(outlier.size = 0.1) +
   theme(axis.text.x = element_text(angle=90, vjust=1, hjust=1))
 ```
