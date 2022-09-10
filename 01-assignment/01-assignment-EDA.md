@@ -442,72 +442,54 @@ df_all <- df_all %>%
 ```
 
 ``` r
-ggplot(data = filter(df_all, year == "2004")) + geom_jitter(mapping = aes(x = Date,
-    y = PM2.5Concentration)) + geom_smooth(mapping = aes(x = Date,
-    y = PM2.5Concentration))
+require(gridExtra)
 ```
+
+    ## Loading required package: gridExtra
+
+    ## 
+    ## Attaching package: 'gridExtra'
+
+    ## The following object is masked from 'package:dplyr':
+    ## 
+    ##     combine
+
+``` r
+p1 <- ggplot(data = filter(df_all, year == "2004"), mapping = aes(x = Date,
+    y = PM2.5Concentration)) + geom_jitter(col = "red", size = 0.1) +
+    geom_smooth(col = "black")
+
+p2 <- ggplot(data = filter(df_all, year == "2019"), mapping = aes(x = Date,
+    y = PM2.5Concentration)) + geom_jitter(col = "blue", size = 0.1) +
+    geom_smooth(col = "black") + ylim(0, 250)
+
+grid.arrange(p1, p2, ncol = 2)
+```
+
+    ## `geom_smooth()` using method = 'gam' and formula 'y ~ s(x, bs = "cs")'
 
     ## `geom_smooth()` using method = 'gam' and formula 'y ~ s(x, bs = "cs")'
 
 ![](01-assignment-EDA_files/figure-gfm/Check%20temporal%20patterns-1.png)<!-- -->
-
-``` r
-ggplot(data = filter(df_all, year == "2019")) + geom_jitter(mapping = aes(x = Date,
-    y = PM2.5Concentration)) + geom_smooth(mapping = aes(x = Date,
-    y = PM2.5Concentration))
-```
-
-    ## `geom_smooth()` using method = 'gam' and formula 'y ~ s(x, bs = "cs")'
-
-![](01-assignment-EDA_files/figure-gfm/Check%20temporal%20patterns%20for%202019-1.png)<!-- -->
+The temporal patterns look similar in both years, with spikes in
+January, April, July, and at the end of the year starting in October.
 
 ##### 5. Explore the main question of interest at three different spatial levels. Create exploratory plots (e.g. boxplots, histograms, line plots) and summary statistics that best suit each level of data. Be sure to write up explanations of what you observe in these data.
 
 ``` r
-# Plot 2004 daata
-par(mfrow = c(2, 1), mar = c(2, 4, 2, 1))
-hist(subset(df_all, year == "2004")$PM2.5Concentration, col = "red",
-    breaks = 200, main = "2004 PM 2.5 Concentration", xlab = "PM 2.5")
-abline(v = 65, lwd = 2)
-abline(v = median(subset(df_all, year == "2004")$PM2.5Concentration),
-    lwd = 2, col = "purple")
-
-# Plot 2019 data
-hist(subset(df_all, year == "2019")$PM2.5Concentration, col = "light blue",
-    breaks = 200, main = "2019 PM 2.5 Concentration", xlab = "PM 2.5",
-    xlim = c(0, 250))
-abline(v = 35, lwd = 2)
-abline(v = median(subset(df_all, year == "2019")$PM2.5Concentration),
-    lwd = 2, col = "purple")
+ggplot(data = df_all) + geom_bar(mapping = aes(x = PM2.5Concentration,
+    fill = year)) + coord_cartesian(xlim = c(0, 100))
 ```
 
-![](01-assignment-EDA_files/figure-gfm/Histograms%20of%20PM%202.5%20concentrations-1.png)<!-- -->
+![](01-assignment-EDA_files/figure-gfm/unnamed-chunk-7-1.png)<!-- -->
 
 ``` r
 ggplot(df_all, mapping = aes(x = COUNTY, y = PM2.5Concentration,
-    color = year)) + geom_jitter() + theme(axis.text.x = element_text(angle = 90,
-    vjust = 0.5, hjust = 1))
+    color = year)) + geom_jitter(size = 0.3) + theme(axis.text.x = element_text(angle = 90,
+    vjust = 1, hjust = 1))
 ```
 
 ![](01-assignment-EDA_files/figure-gfm/Plotting%20PM2.5%20Concentrations%20for%20all%20counties-1.png)<!-- -->
-
-``` r
-county_averages <- df_all %>%
-    group_by(COUNTY, year) %>%
-    summarise_at(vars(PM2.5Concentration), list(Mean_PM2.5 = median))
-
-
-ggplot(county_averages) + geom_point(mapping = aes(x = COUNTY,
-    y = Mean_PM2.5, color = year)) + theme(axis.text.x = element_text(angle = 90,
-    vjust = 0.5, hjust = 1))
-```
-
-![](01-assignment-EDA_files/figure-gfm/Plot%20median%20PM2.5%20concentration%20of%20each%20county%20on%20scatterplot-1.png)<!-- -->
-
-``` r
-# Change to bar plot to better represent categorical x-axis
-# variable. Make a box plots per county.
-```
 
 Look at sites in Los Angeles County.
 
@@ -536,6 +518,8 @@ filter(df_all, COUNTY == "Los Angeles") %>%
     ## 15:                         Reseda
     ## 16:                  Santa Clarita
 
+One of the sites is missing a name.
+
 ``` r
 filter(df_all, COUNTY == "Los Angeles" & Site.Name == "") %>%
     select(Site.Name, SITE_LATITUDE, SITE_LONGITUDE) %>%
@@ -545,23 +529,18 @@ filter(df_all, COUNTY == "Los Angeles" & Site.Name == "") %>%
     ##    Site.Name SITE_LATITUDE SITE_LONGITUDE
     ## 1:                34.01407      -118.0606
 
-``` r
-# One of the sites is missing a name
+From looking at Google Maps and matching the latitude and longitude, it
+seems as though the coordinates 34.01407, -118.0606 are close to the
+Pico Rivera \#2 site, leading me to suspect that the unnamed site is
+Pico Rivera \#1.
 
-# From looking at Google Maps and matching the latitude and
-# longitude, it seems as though the coordinates 34.01407,
-# -118.0606 are close to the Pico Rivera #2 site, leading
-# me to suspect that the unnamed site is Pico Rivera #1.
-
-# I validated this by checking the AQS website for a
-# monitoring station at this location.
-# https://epa.maps.arcgis.com/apps/webappviewer/index.html?id=5f239fd3e72f424f98ef3d5def547eb5&extent=-146.2334,13.1913,-46.3896,56.5319
-# The monitor is inactive now, but was active in 2004.
-# Additionally, it wasn't given a site name, but the
-# website says the city is 'Pico Rivera'. Will update this
-# information in the data set to accurately reflect the
-# site location.
-```
+I validated this by checking the AQS website for a monitoring station at
+this location.
+<https://epa.maps.arcgis.com/apps/webappviewer/index.html?id=5f239fd3e72f424f98ef3d5def547eb5&extent=-146.2334,13.1913,-46.3896,56.5319>
+The monitor is inactive now, but was active in 2004. Additionally, it
+wasn’t given a site name, but the website says the city is “Pico
+Rivera”. Will update this information in the data set to accurately
+reflect the site location.
 
 ``` r
 df_la <- filter(df_all, COUNTY == "Los Angeles")
@@ -575,4 +554,4 @@ ggplot(data = df_la, mapping = aes(x = Site.Name, y = PM2.5Concentration,
     vjust = 1, hjust = 1))
 ```
 
-![](01-assignment-EDA_files/figure-gfm/unnamed-chunk-8-1.png)<!-- -->
+![](01-assignment-EDA_files/figure-gfm/Plot%20data%20in%20Los%20Angeles%20County-1.png)<!-- -->

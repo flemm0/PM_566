@@ -189,13 +189,13 @@ df_all <- df_all %>%
 
 require(gridExtra)
 
-p1 <- ggplot(data = filter(df_all, year == "2004")) +
-  geom_jitter(mapping = aes(x = Date, y = PM2.5Concentration), col = "red") +
-  geom_smooth(mapping = aes(x = Date, y = PM2.5Concentration), col = "black")
+p1 <- ggplot(data = filter(df_all, year == "2004"), mapping = aes(x = Date, y = PM2.5Concentration)) +
+  geom_jitter(col = "red", size = 0.1) +
+  geom_smooth(col = "black")
 
-p2 <- ggplot(data = filter(df_all, year == "2019")) +
-  geom_jitter(mapping = aes(x = Date, y = PM2.5Concentration), col = "blue") +
-  geom_smooth(mapping = aes(x = Date, y = PM2.5Concentration), col = "black") +
+p2 <- ggplot(data = filter(df_all, year == "2019"), mapping = aes(x = Date, y = PM2.5Concentration)) +
+  geom_jitter(col = "blue", size = 0.1) +
+  geom_smooth(col = "black") +
   ylim(0, 250)
 
 grid.arrange(p1, p2, ncol=2)
@@ -219,27 +219,18 @@ The temporal patterns look similar in both years, with spikes in January, April,
 
 ##### 5. Explore the main question of interest at three different spatial levels. Create exploratory plots (e.g. boxplots, histograms, line plots) and summary statistics that best suit each level of data. Be sure to write up explanations of what you observe in these data.
 
-
-
-```{r Histograms of PM 2.5 concentrations}
-
-#Plot 2004 daata
-par(mfrow = c(2, 1), mar = c(2, 4, 2, 1))
-hist(subset(df_all, year == "2004")$PM2.5Concentration, col = "red", breaks = 200, main = "2004 PM 2.5 Concentration", xlab = "PM 2.5")
-abline(v = 65, lwd = 2)
-abline(v = median(subset(df_all, year == "2004")$PM2.5Concentration), lwd = 2, col = "purple")
-
-#Plot 2019 data
-hist(subset(df_all, year == "2019")$PM2.5Concentration, col = "light blue", breaks = 200, main = "2019 PM 2.5 Concentration", xlab = "PM 2.5", xlim = c(0, 250))
-abline(v = 35, lwd = 2)
-abline(v = median(subset(df_all, year == "2019")$PM2.5Concentration), lwd = 2, col = "purple")
+```{r}
+ggplot(data = df_all) +
+  geom_bar(mapping = aes(x = PM2.5Concentration, fill=year)) +
+  coord_cartesian(xlim = c(0, 100))
 
 ```
 
+
 ```{r Plotting PM2.5 Concentrations for all counties}
 ggplot(df_all, mapping = aes(x = COUNTY, y = PM2.5Concentration, color = year)) +
-  geom_jitter() +
-  theme(axis.text.x = element_text(angle=90, vjust=.5, hjust=1))
+  geom_jitter(size = 0.3) +
+  theme(axis.text.x = element_text(angle=90, vjust=1, hjust=1))
 ```
 
 
