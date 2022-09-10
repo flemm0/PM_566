@@ -1,7 +1,7 @@
 Assignment 01: Exploratory Data Analysis
 ================
 Flemming Wu
-2022-09-09
+2022-09-10
 
 #### We will work with air pollution data from the U.S. Environmental Protection Agency (EPA). The primary question you will answer is whether daily concentrations of PM 2.5 (particulate matter air pollution with aerodynamic diameter less than 2.5 m) have decreased in California over the last 15 years (from 2004 to 2019).
 
@@ -366,7 +366,8 @@ pal <- colorFactor(
 
 leaflet(df_all) %>%
   addProviderTiles('OpenStreetMap') %>%
-  addCircles(lat=~SITE_LATITUDE,lng=~SITE_LONGITUDE, color = ~pal(year))
+  addCircles(lat=~SITE_LATITUDE,lng=~SITE_LONGITUDE, color = ~pal(year)) %>%
+  addLegend(pal = pal, values = ~year)
 ```
 
 ![](01-assignment-EDA_files/figure-gfm/Plotting%20leaflet-1.png)<!-- -->
@@ -387,10 +388,6 @@ summary(df_all$PM2.5Concentration)
 
     ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
     ##  -2.200   4.400   7.200   9.171  11.300 251.000
-
-In the case of concentration of particulate matter in the air, it seems
-implausible to have a negative concentration. Remove these observations
-from the data.
 
 ``` r
 df_all %>%
@@ -420,48 +417,113 @@ df_all %>%
     ## # … with 31 more rows
 
 ``` r
-df_all %>%
-  filter(PM2.5Concentration == max(PM2.5Concentration))
+noquote(c(sum (with(df_all, PM2.5Concentration < 0 & year == "2019")) / nrow(filter(df_all, year == "2019")) * 100, "percent of 2019 data is negative"))
 ```
 
-    ##          Date Source  Site.ID POC PM2.5Concentration    UNITS DAILY_AQI_VALUE
-    ## 1: 2004-07-18    AQS 60431001   3                251 ug/m3 LC             301
-    ##                                     Site.Name DAILY_OBS_COUNT PERCENT_COMPLETE
-    ## 1: Yosemite NP-Yosemite Village Vistor Center               1              100
-    ##    AQS_PARAMETER_CODE                     AQS_PARAMETER_DESC CBSA_CODE
-    ## 1:              88502 Acceptable PM2.5 AQI & Speciation Mass        NA
-    ##    CBSA_NAME STATE_CODE      STATE COUNTY_CODE   COUNTY SITE_LATITUDE
-    ## 1:                    6 California          43 Mariposa      37.74871
-    ##    SITE_LONGITUDE year
-    ## 1:      -119.5871 2004
+    ## [1] 0.530513958913387                percent of 2019 data is negative
+
+``` r
+noquote(c(sum (with(df_all, PM2.5Concentration < 0 & year == "2004")) / nrow(filter(df_all, year == "2004")) * 100, "percent of 2004 data is negative"))
+```
+
+    ## [1] 0.00519939686996308              percent of 2004 data is negative
+
+For measurements of **concentration** of particulate matter in the air,
+it seems implausible to have a negative observations. Remove from the
+data.
+
+``` r
+df_all <- df_all %>%
+  filter(PM2.5Concentration > 0)
+```
 
 ##### 5. Explore the main question of interest at three different spatial levels. Create exploratory plots (e.g. boxplots, histograms, line plots) and summary statistics that best suit each level of data. Be sure to write up explanations of what you observe in these data.
 
 ``` r
-boxplot(PM2.5Concentration ~ year, data = df_all, col = df_all$year)
-```
-
-![](01-assignment-EDA_files/figure-gfm/Boxplot%20of%20concentrations-1.png)<!-- -->
-
-``` r
-#Probably not the best option, as the data are highly skewed
-```
-
-``` r
+#Plot 2004 daata
 par(mfrow = c(2, 1), mar = c(2, 4, 2, 1))
 hist(subset(df_all, year == "2004")$PM2.5Concentration, col = "red", breaks = 200, main = "2004 PM 2.5 Concentration", xlab = "PM 2.5")
 abline(v = 65, lwd = 2)
 abline(v = median(subset(df_all, year == "2004")$PM2.5Concentration), lwd = 2, col = "purple")
-hist(subset(df_all, year == "2019")$PM2.5Concentration, col = "blue", breaks = 200, main = "2019 PM 2.5 Concentration", xlab = "PM 2.5")
+
+#Plot 2019 data
+hist(subset(df_all, year == "2019")$PM2.5Concentration, col = "light blue", breaks = 200, main = "2019 PM 2.5 Concentration", xlab = "PM 2.5", xlim = c(0, 250))
 abline(v = 35, lwd = 2)
 abline(v = median(subset(df_all, year == "2019")$PM2.5Concentration), lwd = 2, col = "purple")
 ```
 
-![](01-assignment-EDA_files/figure-gfm/Histograms%20of%20concentrations-1.png)<!-- -->
+![](01-assignment-EDA_files/figure-gfm/Histograms%20of%20PM%202.5%20concentrations-1.png)<!-- -->
 
 ``` r
-#Need to adjust the x-axis to be the same scale
+ggplot(df_all, mapping = aes(x = COUNTY, y = PM2.5Concentration, color = year)) +
+  geom_jitter() +
+  theme(axis.text.x = element_text(angle=90, vjust=.5, hjust=1))
 ```
 
-\#At .05 significance level, we conclude that the PM2.5 concentrations
-in 2004 and 2019 from the data set are nonidentical populations.
+![](01-assignment-EDA_files/figure-gfm/Plotting%20PM2.5%20Concentrations%20for%20all%20counties-1.png)<!-- -->
+
+DELETE PLOT BELOW
+
+``` r
+ggplot(df_all, mapping = aes(x = COUNTY, y = PM2.5Concentration, fill = year)) +
+  geom_boxplot(outlier.size = 0.01) +
+  theme(axis.text.x = element_text(angle=90, vjust=.5, hjust=1)) +
+  ylim(0, 25)
+```
+
+    ## Warning: Removed 3170 rows containing non-finite values (stat_boxplot).
+
+![](01-assignment-EDA_files/figure-gfm/Zoom%20in%20on%20where%20the%20majority%20of%20the%20data%20lie-1.png)<!-- -->
+
+``` r
+county_averages <- df_all %>%
+  group_by(COUNTY, year) %>%
+  summarise_at(vars(PM2.5Concentration), list(Mean_PM2.5 = mean))
+  
+  
+ggplot(county_averages) +
+  geom_point(mapping = aes(x = COUNTY, y = Mean_PM2.5, color = year)) +
+  theme(axis.text.x = element_text(angle=90, vjust=.5, hjust=1))
+```
+
+![](01-assignment-EDA_files/figure-gfm/Plot%20means%20of%20each%20county%20on%20scatterplot-1.png)<!-- -->
+
+``` r
+#Change to bar plot to better represent categorical x-axis variable. Make a box plots per county.
+```
+
+Look at sites in Los Angeles County.
+
+``` r
+filter(df_all, COUNTY == "Los Angeles") %>%
+  select(Site.Name) %>%
+  unique() %>%
+  arrange(Site.Name)
+```
+
+    ##                          Site.Name
+    ##  1:                               
+    ##  2:                          Azusa
+    ##  3:                        Burbank
+    ##  4:                        Compton
+    ##  5:                       Glendora
+    ##  6:      Lancaster-Division Street
+    ##  7:                          Lebec
+    ##  8:             Long Beach (North)
+    ##  9:             Long Beach (South)
+    ## 10: Long Beach-Route 710 Near Road
+    ## 11:  Los Angeles-North Main Street
+    ## 12:                        Lynwood
+    ## 13:                       Pasadena
+    ## 14:                 Pico Rivera #2
+    ## 15:                         Reseda
+    ## 16:                  Santa Clarita
+
+``` r
+filter(df_all, COUNTY == "Los Angeles") %>%
+  ggplot(mapping = aes(x = Site.Name, y = PM2.5Concentration, fill = year)) +
+  geom_boxplot(outlier.size = 0.1) +
+  theme(axis.text.x = element_text(angle=90, vjust=1, hjust=1))
+```
+
+![](01-assignment-EDA_files/figure-gfm/unnamed-chunk-8-1.png)<!-- -->

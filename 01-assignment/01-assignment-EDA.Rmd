@@ -144,7 +144,8 @@ pal <- colorFactor(
 
 leaflet(df_all) %>%
   addProviderTiles('OpenStreetMap') %>%
-  addCircles(lat=~SITE_LATITUDE,lng=~SITE_LONGITUDE, color = ~pal(year))
+  addCircles(lat=~SITE_LATITUDE,lng=~SITE_LONGITUDE, color = ~pal(year)) %>%
+  addLegend(pal = pal, values = ~year)
 ```
 
 
@@ -159,9 +160,9 @@ No missing values
 ```{r}
 summary(df_all$PM2.5Concentration)
 ```
-In the case of concentration of particulate matter in the air, it seems implausible to have a negative concentration. Remove these observations from the data.
 
-```{r View negative readings}
+
+```{r View negative readings by year and location}
 df_all %>%
   filter(PM2.5Concentration < 0) %>%
   group_by(Site.Name, year) %>%
@@ -169,41 +170,91 @@ df_all %>%
   arrange(desc(negative_readings))
 ```
 
+```{r Check proportion of implausible data}
+noquote(c(sum (with(df_all, PM2.5Concentration < 0 & year == "2019")) / nrow(filter(df_all, year == "2019")) * 100, "percent of 2019 data is negative"))
 
-```{r View abnormally high concentrations}
-df_all %>%
-  filter(PM2.5Concentration == max(PM2.5Concentration))
+noquote(c(sum (with(df_all, PM2.5Concentration < 0 & year == "2004")) / nrow(filter(df_all, year == "2004")) * 100, "percent of 2004 data is negative"))
+
 ```
+
+For measurements of __concentration__ of particulate matter in the air, it seems implausible to have a negative observations. Remove from the data.
+
+```{r}
+df_all <- df_all %>%
+  filter(PM2.5Concentration > 0)
+```
+
+
+
+
 
 
 
 ##### 5. Explore the main question of interest at three different spatial levels. Create exploratory plots (e.g. boxplots, histograms, line plots) and summary statistics that best suit each level of data. Be sure to write up explanations of what you observe in these data.
 
 
-```{r Boxplot of concentrations}
-boxplot(PM2.5Concentration ~ year, data = df_all, col = df_all$year)
-#Probably not the best option, as the data are highly skewed
-```
 
+```{r Histograms of PM 2.5 concentrations}
 
-```{r Histograms of concentrations}
+#Plot 2004 daata
 par(mfrow = c(2, 1), mar = c(2, 4, 2, 1))
 hist(subset(df_all, year == "2004")$PM2.5Concentration, col = "red", breaks = 200, main = "2004 PM 2.5 Concentration", xlab = "PM 2.5")
 abline(v = 65, lwd = 2)
 abline(v = median(subset(df_all, year == "2004")$PM2.5Concentration), lwd = 2, col = "purple")
-hist(subset(df_all, year == "2019")$PM2.5Concentration, col = "blue", breaks = 200, main = "2019 PM 2.5 Concentration", xlab = "PM 2.5")
+
+#Plot 2019 data
+hist(subset(df_all, year == "2019")$PM2.5Concentration, col = "light blue", breaks = 200, main = "2019 PM 2.5 Concentration", xlab = "PM 2.5", xlim = c(0, 250))
 abline(v = 35, lwd = 2)
 abline(v = median(subset(df_all, year == "2019")$PM2.5Concentration), lwd = 2, col = "purple")
 
-#Need to adjust the x-axis to be the same scale
+```
+
+```{r Plotting PM2.5 Concentrations for all counties}
+ggplot(df_all, mapping = aes(x = COUNTY, y = PM2.5Concentration, color = year)) +
+  geom_jitter() +
+  theme(axis.text.x = element_text(angle=90, vjust=.5, hjust=1))
 ```
 
 
 
 
-
-
-```{r, include = FALSE}
-wilcox.test(subset(df_all, year == "2004")$PM2.5Concentration, subset(df_all, year == "2019")$PM2.5Concentration)
+DELETE PLOT BELOW
+```{r Zoom in on where the majority of the data lie}
+ggplot(df_all, mapping = aes(x = COUNTY, y = PM2.5Concentration, fill = year)) +
+  geom_boxplot(outlier.size = 0.01) +
+  theme(axis.text.x = element_text(angle=90, vjust=.5, hjust=1)) +
+  ylim(0, 25)
 ```
-#At .05 significance level, we conclude that the PM2.5 concentrations in 2004 and 2019 from the data set are nonidentical populations.
+
+
+```{r Plot means of each county on scatterplot}
+county_averages <- df_all %>%
+  group_by(COUNTY, year) %>%
+  summarise_at(vars(PM2.5Concentration), list(Mean_PM2.5 = mean))
+  
+  
+ggplot(county_averages) +
+  geom_point(mapping = aes(x = COUNTY, y = Mean_PM2.5, color = year)) +
+  theme(axis.text.x = element_text(angle=90, vjust=.5, hjust=1))
+
+#Change to bar plot to better represent categorical x-axis variable. Make a box plots per county.
+```
+
+
+
+Look at sites in Los Angeles County.
+```{r}
+filter(df_all, COUNTY == "Los Angeles") %>%
+  select(Site.Name) %>%
+  unique() %>%
+  arrange(Site.Name)
+```
+
+
+```{r}
+filter(df_all, COUNTY == "Los Angeles") %>%
+  ggplot(mapping = aes(x = Site.Name, y = PM2.5Concentration, fill = year)) +
+  geom_boxplot(outlier.size = 0.1) +
+  theme(axis.text.x = element_text(angle=90, vjust=1, hjust=1))
+```
+
