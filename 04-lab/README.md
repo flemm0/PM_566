@@ -68,6 +68,7 @@ met_avg <- met[,.(
   rh       = mean(rh,na.rm=TRUE),
   wind.sp  = mean(wind.sp,na.rm=TRUE),
   vis.dist = mean(vis.dist,na.rm=TRUE),
+  dew.point = mean(dew.point,na.rm=TRUE),
   lat      = mean(lat),
   lon      = mean(lon), 
   elev     = mean(elev,na.rm=TRUE)
@@ -75,10 +76,17 @@ met_avg <- met[,.(
 ```
 
 ``` r
-met_avg[, lat_region := fifelse(lon > -98.00, "E", "W")]
-met_avg[, lon_region := fifelse(lat > 39.71, "N", "S")]
-met_avg$region <- paste(met_avg$lon_region, met_avg$lat_region)
+met_avg[, region := fifelse(lon > -98 & lat > 39.71, "NE", 
+                fifelse(lon < -98 & lat > 39.71, "NW",
+                fifelse(lon < -98 & lat <= 39.71, "SW", "SE")))
+                ]
+
+table(met_avg$region)
 ```
+
+    ## 
+    ##  NE  NW  SE  SW 
+    ## 484 146 649 296
 
 ``` r
 met_avg[, elev_cat := fifelse(elev > 252, "high", "low")]
@@ -86,6 +94,44 @@ met_avg[, elev_cat := fifelse(elev > 252, "high", "low")]
 
 ### 3. Use geom_violin() to examine the wind speed and dew point temperature by region
 
+Use facets Make sure to deal with NA category Describe what you observe
+in the graph
+
 ``` r
-#ggplot()
+met_avg[!is.na(region)] %>%
+  ggplot() +
+  geom_violin(mapping = aes(x = 1, y = dew.point, color = region, fill = region)) +
+  facet_wrap(~ region, nrow = 1)
 ```
+
+![](README_files/figure-gfm/Dew%20Point%20by%20region-1.png)<!-- --> The
+highest dew point temperature is recorded in the southeast.
+
+``` r
+met_avg[!is.na(region) & !is.na(wind.sp)] %>%
+  ggplot() +
+  geom_violin(aes(x =  1, y = wind.sp, color = region, fill = region)) +
+  facet_wrap(~ region, nrow = 1)
+```
+
+![](README_files/figure-gfm/Wind%20speed%20by%20region-1.png)<!-- -->
+The highest wind speed was recorded in the northeast.
+
+### 4. Use geom_jitter with geom_smooth to examine the association between dew point temperature and wind speed by region
+
+Colour points by region Make sure to deal with NA category Fit a linear
+regression line by region Describe what you observe in the graph
+
+``` r
+met_avg[!is.na(region) & !is.na(wind.sp)] %>%
+  ggplot(mapping = aes(x = wind.sp, y = dew.point, color = region)) +
+  geom_point(mapping = aes(color = region)) +
+  geom_smooth(method = lm, mapping = aes(linetype = region)) +
+  facet_wrap(~ region, nrow = 2)
+```
+
+    ## `geom_smooth()` using formula 'y ~ x'
+
+![](README_files/figure-gfm/unnamed-chunk-5-1.png)<!-- --> It appears
+that the southwest region is the only region that sees a decrease in
+dewpoint with increasing wind speed.
