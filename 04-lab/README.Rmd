@@ -132,3 +132,79 @@ met_avg[!is.na(region) & !is.na(wind.sp)] %>%
 It appears that the southwest region is the only region that sees a decrease in dewpoint with increasing wind speed.
 
 
+### 5. Use geom_bar to create barplots of the weather stations by elevation category coloured by region
+
+Bars by elevation category using position="dodge"
+Change colours from the default. Colour by region using scale_fill_brewer see this
+Create nice labels on axes and add a title
+Describe what you observe in the graph
+Make sure to deal with NA
+
+```{r}
+met_avg[!is.na(elev_cat)] %>%
+  ggplot() +
+  geom_bar(mapping = aes(x = elev_cat, col = region))
+```
+
+### 6. Use stat_summary to examine mean dew point and wind speed by region with standard deviation error bars
+
+Make sure to remove NA
+Use fun.data=“mean_sdl” in stat_summary
+Add another layer of stats_summary but change the geom to "errorbar" (see the help).
+Describe the graph and what you observe
+Dew point temperature is…
+Wind speed is…
+
+
+```{r}
+met_avg[!is.na(dew.point)] %>%
+  ggplot(mapping = aes(x=region, y=dew.point)) +
+  stat_summary(fun.data = "mean_sdl", geom = "errorbar")
+```
+The west seems to have lower dew points on average
+
+
+### 7. Make a map showing the spatial trend in relative h in the US
+
+Make sure to remove NA
+Use leaflet()
+Make a colour palette with custom colours
+Use addMarkers to include the top 10 places in relative h (hint: this will be useful rank(-rh) <= 10)
+Add a legend
+Describe trend in RH across the US
+
+```{r}
+top10rh <- met_avg[rank(-rh) <= 10]
+
+top10rh
+```
+
+
+```{r}
+library(leaflet)
+library(webshot)
+
+
+rh.pal <- colorNumeric(c('darkgreen','goldenrod','brown'), domain=met_avg$rh)
+rh.pal
+
+
+```
+
+```{r}
+rhmap <- leaflet(met_avg) %>% 
+  # The looks of the Map
+  addProviderTiles('CartoDB.Positron') %>% 
+  # Some circles
+  addCircles(
+    lat = ~lat, lng=~lon,
+    label = ~paste0(rh), color = ~ rh.pal(rh),
+    opacity = 1, fillOpacity = 1, radius = 500
+    ) %>%
+  # And a pretty legend
+  addLegend('bottomleft', pal=rh.pal, values=met_avg$rh,
+          title='Relative Humidity', opacity=1)
+
+rhmap
+```
+
