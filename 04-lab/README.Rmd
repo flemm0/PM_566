@@ -1,0 +1,71 @@
+---
+title: "04-lab-Data-Visualization"
+author: "Flemming Wu"
+date: "2022-09-14"
+output: github_document
+always_allow_html: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+EVAL <- FALSE
+ECHO <- EVAL
+```
+
+### 1. Read in the data
+
+```{r, message = FALSE}
+if(!file.exists("met_all.gz")){
+  download.file(
+    url = "https://raw.githubusercontent.com/USCbiostats/data-science-data/master/02_met/met_all.gz",
+    destfile = "met_all.gz",
+    method = "libcurl",
+    timeout = 60
+  )
+}
+
+met <- data.table::fread("met_all.gz")
+```
+```{r, message = FALSE}
+library(tidyverse)
+library(data.table)
+```
+
+### 2. Preparing the data
+
+```{r Checking data}
+dim(met)
+```
+```{r Checking data}
+summary(met$elev)
+```
+
+```{r}
+summary(met$temp)
+```
+
+```{r Cleaning Data}
+met <- met[met$temp > -17][elev == 9999.0, elev := NA]
+```
+
+```{r Creating date column}
+met$date = paste(met$year, met$month, met$day, sep = "-")
+met <- mutate(met, date = as.Date(date, "%Y-%m-%d"))
+```
+
+
+```{r}
+met$week <- data.table::week(met$date)
+```
+
+```{r Keep the observations of the first week of the month}
+met <- met[met$week == min(met$week)]
+```
+
+
+
+
+
