@@ -13,7 +13,7 @@ knitr::opts_chunk$set(tidy.opts = list(width.cutoff = 60), tidy = TRUE)
 setwd("~/Desktop/PM566/GitHub/01-assignment")
 ```
 
-```{r, message = FALSE}
+```{r Load Libraries, message = FALSE}
 library(tidyverse)
 library(leaflet)
 library(webshot)
@@ -39,7 +39,7 @@ data_2019 <- data.table::fread("data_2019.csv")
 noquote(c("2004 dimensions: ", dim(data_2004)))
 noquote(c("2019 dimensions: ", dim(data_2019)))
 ```
-```{r Check how many more observations there are for 2019}
+```{r Checking ns}
 dim(data_2019)[1]/dim(data_2004)[1]
 ```
 There are almost 3 times as many observations for PM 2.5 concentration in 2019 compared to 2004.
@@ -81,7 +81,7 @@ One observation for PM 2.5 concentration is negative.
 ```{r Check the maximum values}
 quantile(data_2004$Daily.Mean.PM2.5.Concentration, seq(0, 1, 0.1))
 ```
-Looks like 10% of the data lie between concentration levels of 27 and 251.
+Looks like 10% of the data lie between very high concentration levels of 27 and 251.
 
 
 ```{r Check PM 2.5 concentration values for 2019}
@@ -99,7 +99,7 @@ quantile(data_2019$Daily.Mean.PM2.5.Concentration, seq(0, 1, 0.1))
 
 The EPA standard for PM 2.5 concentration post-1997 is 65 ug/m3 and was lowered to 35 ug/m3 since 2006.
 
-The negative PM 2.5 concentration levels pose a problem for answering the question and will be removed.
+The negative PM 2.5 concentration levels pose a problem for answering the question and will be removed later on.
 
 
 
