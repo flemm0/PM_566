@@ -1,7 +1,7 @@
 Assignment 01: Exploratory Data Analysis
 ================
 Flemming Wu
-2022-09-15
+2022-09-10
 
 #### We will work with air pollution data from the U.S. Environmental Protection Agency (EPA). The primary question you will answer is whether daily concentrations of PM 2.5 (particulate matter air pollution with aerodynamic diameter less than 2.5 m) have decreased in California over the last 15 years (from 2004 to 2019).
 
@@ -48,9 +48,6 @@ dim(data_2019)[1]/dim(data_2004)[1]
 
 There are almost 3 times as many observations for PM 2.5 concentration
 in 2019 compared to 2004.
-
-  
-Check headers and footers.
 
 ``` r
 head(data_2004)
@@ -212,9 +209,6 @@ tail(data_2019)
     ## 5:   Yolo      38.66121      -121.7327
     ## 6:   Yolo      38.66121      -121.7327
 
-  
-Check variables.
-
 ``` r
 str(data_2004)
 ```
@@ -286,7 +280,7 @@ summary(data_2004$Daily.Mean.PM2.5.Concentration)
     ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
     ##   -0.10    6.00   10.10   13.13   16.30  251.00
 
-Looks like some observations in 2004 are negative.
+Looks like some observations are below 0.
 
 ``` r
 table(data_2004$Daily.Mean.PM2.5.Concentration) %>%
@@ -326,7 +320,7 @@ table(data_2019$Daily.Mean.PM2.5.Concentration) %>%
     ## -2.2   -2 -1.9 -1.8 -1.7 -1.6 
     ##    1   12   16   11   12   12
 
-Looks like 2019 has many more PM 2.5 concentration observations that are
+Looks like 2019 has many more 2.5 concentration observations that are
 below 0.
 
 ``` r
@@ -337,20 +331,18 @@ quantile(data_2019$Daily.Mean.PM2.5.Concentration, seq(0, 1,
     ##    0%   10%   20%   30%   40%   50%   60%   70%   80%   90%  100% 
     ##  -2.2   2.3   3.5   4.5   5.5   6.5   7.7   9.1  10.9  14.2 120.9
 
-10% of the data in 2019 lie between concentration levels of 14.2 and
-120.9. Additionally, the maximum 2.5 concentration observation is less
-than half that of the 2004 data. This is plausible due to increase of
-effort to reduce air pollution levels.
+10% of the data lie between concentration levels of 14.2 and 120.9.
+Additionally, the maximum 2.5 concentration observation is less than
+half that of the 2004 data. This is plausible due to increase of effort
+to reduce air pollution levels.
 
 The EPA standard for PM 2.5 concentration post-1997 is 65 ug/m3 and was
 lowered to 35 ug/m3 since 2006.
 
 The negative PM 2.5 concentration levels pose a problem for answering
-the question and will be removed later on.
+the question and will be removed.
 
 ##### 2. Combine the two years of data into one data frame. Use the Date variable to create a new column for year, which will serve as an identifier. Change the names of the key variables so that they are easier to refer to in your code.
-
-Changing dates to datetime type and creating year column.
 
 ``` r
 data_2004 <- mutate(data_2004, Date = as.Date(Date, "%m/%d/%Y"))
@@ -363,15 +355,11 @@ data_2019$year <- format(as.Date(data_2019$Date, format = "%m/%d/%Y"),
     "%Y")
 ```
 
-Concatenate data frames.
-
 ``` r
 df_all <- rbind(data_2004, data_2019)
 
 names(df_all) <- make.names(names(df_all))
 names(df_all)[names(df_all) == "Daily.Mean.PM2.5.Concentration"] <- "PM2.5Concentration"
-names(df_all)[names(df_all) == "SITE_LATITUDE"] <- "lat"
-names(df_all)[names(df_all) == "SITE_LONGITUDE"] <- "lon"
 
 df_all <- df_all[order(df_all$PM2.5Concentration)]  #Ascending order by PM 2.5
 ```
@@ -383,17 +371,11 @@ pal <- colorFactor(palette = c("red", "blue"), domain = df_all$year)
 
 leaflet(df_all) %>%
     addProviderTiles("OpenStreetMap") %>%
-    addCircles(lat = ~lat, lng = ~lon, color = ~pal(year)) %>%
+    addCircles(lat = ~SITE_LATITUDE, lng = ~SITE_LONGITUDE, color = ~pal(year)) %>%
     addLegend(pal = pal, values = ~year)
 ```
 
-![](README_files/figure-gfm/Plotting%20leaflet-1.png)<!-- --> From this
-plot, it is evident that there are more sites recording PM 2.5
-concentration levels in 2019 than compared to 2004. This makes sense,
-given an increase in air pollution reduction efforts over time.
-Additionally, the sites in 2019 seem to be more evenly spread around
-California, instead of having most monitors near the large population
-centers in Los Angeles, San Francisco, and San Diego.
+![](01-assignment-EDA_files/figure-gfm/Plotting%20leaflet-1.png)<!-- -->
 
 ##### 4. Check for any missing or implausible values of PM 2.5 in the combined dataset. Explore the proportions of each and provide a summary of any temporal patterns you see in these observations.
 
@@ -403,10 +385,14 @@ sum(as.numeric(is.na(df_all$PM2.5Concentration)))
 
     ## [1] 0
 
-No missing values in data frame.
+No missing values
 
-Take a closer look at sites giving negative PM 2.5 concentration
-readings:
+``` r
+summary(df_all$PM2.5Concentration)
+```
+
+    ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+    ##  -2.200   4.400   7.200   9.171  11.300 251.000
 
 ``` r
 df_all %>%
@@ -432,8 +418,6 @@ df_all %>%
     ## 10 Table Mountain Air Monitoring Site   2019                  4
     ## # … with 31 more rows
 
-Check proportion of implausible data by year.
-
 ``` r
 noquote(c(sum(with(df_all, PM2.5Concentration < 0 & year == "2019"))/nrow(filter(df_all,
     year == "2019")) * 100, "percent of 2019 data is negative"))
@@ -457,11 +441,20 @@ df_all <- df_all %>%
     filter(PM2.5Concentration > 0)
 ```
 
-Check temporal patterns.
-
 ``` r
 require(gridExtra)
+```
 
+    ## Loading required package: gridExtra
+
+    ## 
+    ## Attaching package: 'gridExtra'
+
+    ## The following object is masked from 'package:dplyr':
+    ## 
+    ##     combine
+
+``` r
 p1 <- ggplot(data = filter(df_all, year == "2004"), mapping = aes(x = Date,
     y = PM2.5Concentration)) + geom_jitter(col = "red", size = 0.1) +
     geom_smooth(col = "black")
@@ -473,30 +466,22 @@ p2 <- ggplot(data = filter(df_all, year == "2019"), mapping = aes(x = Date,
 grid.arrange(p1, p2, ncol = 2)
 ```
 
-![](README_files/figure-gfm/Check%20temporal%20patterns-1.png)<!-- -->
+    ## `geom_smooth()` using method = 'gam' and formula 'y ~ s(x, bs = "cs")'
+
+    ## `geom_smooth()` using method = 'gam' and formula 'y ~ s(x, bs = "cs")'
+
+![](01-assignment-EDA_files/figure-gfm/Check%20temporal%20patterns-1.png)<!-- -->
 The temporal patterns look similar in both years, with spikes in
 January, April, July, and at the end of the year starting in October.
-The spikes in PM 2.5 concentration are larger in 2004 than in 2019.
 
 ##### 5. Explore the main question of interest at three different spatial levels. Create exploratory plots (e.g. boxplots, histograms, line plots) and summary statistics that best suit each level of data. Be sure to write up explanations of what you observe in these data.
-
-state  
-county  
-site in Los Angeles  
-
-Plot data for whole state.
 
 ``` r
 ggplot(data = df_all) + geom_bar(mapping = aes(x = PM2.5Concentration,
     fill = year)) + coord_cartesian(xlim = c(0, 100))
 ```
 
-![](README_files/figure-gfm/Plot%20data%20for%20whole%20state-1.png)<!-- -->
-Both the histograms for 2019 and 2004 data are right-skewed with a peak
-at around 2.5 concentration of 10, but the bars for the 2004 data are
-higher, with many observations above 2.5 concentration of 25.
-
-Plot PM 2.5 concentration by county.
+![](01-assignment-EDA_files/figure-gfm/unnamed-chunk-7-1.png)<!-- -->
 
 ``` r
 ggplot(df_all, mapping = aes(x = COUNTY, y = PM2.5Concentration,
@@ -504,11 +489,7 @@ ggplot(df_all, mapping = aes(x = COUNTY, y = PM2.5Concentration,
     vjust = 1, hjust = 1))
 ```
 
-![](README_files/figure-gfm/Plotting%20PM2.5%20Concentrations%20for%20all%20counties-1.png)<!-- -->
-From the plot, it can be seen that for many counties, there are many
-more high PM 2.5 concentration observations in 2004 than in 2019. Marin
-county holds the highest PM 2.5 concentration observation in the data
-set.
+![](01-assignment-EDA_files/figure-gfm/Plotting%20PM2.5%20Concentrations%20for%20all%20counties-1.png)<!-- -->
 
 Look at sites in Los Angeles County.
 
@@ -541,12 +522,12 @@ One of the sites is missing a name.
 
 ``` r
 filter(df_all, COUNTY == "Los Angeles" & Site.Name == "") %>%
-    select(Site.Name, lat, lon) %>%
+    select(Site.Name, SITE_LATITUDE, SITE_LONGITUDE) %>%
     unique()
 ```
 
-    ##    Site.Name      lat       lon
-    ## 1:           34.01407 -118.0606
+    ##    Site.Name SITE_LATITUDE SITE_LONGITUDE
+    ## 1:                34.01407      -118.0606
 
 From looking at Google Maps and matching the latitude and longitude, it
 seems as though the coordinates 34.01407, -118.0606 are close to the
@@ -567,17 +548,10 @@ df_la$Site.Name <- replace(df_la$Site.Name, df_la$Site.Name ==
     "", "Pico Rivera")
 ```
 
-Plotting sites in Los Angeles County.
-
 ``` r
 ggplot(data = df_la, mapping = aes(x = Site.Name, y = PM2.5Concentration,
     fill = year)) + geom_boxplot(outlier.size = 0.1) + theme(axis.text.x = element_text(angle = 90,
     vjust = 1, hjust = 1))
 ```
 
-![](README_files/figure-gfm/Plot%20data%20in%20Los%20Angeles%20County-1.png)<!-- -->
-For the sites that have recordings in both 2004 and 2019, the median
-observations for 2004 are all higher than the median for observations
-for 2019. Additionally, the median across sites in Los Angeles County
-for 2004 is at about PM 2.5 concentration of 15, whereas the median
-across sites in 2019 are about 10.
+![](01-assignment-EDA_files/figure-gfm/Plot%20data%20in%20Los%20Angeles%20County-1.png)<!-- -->
