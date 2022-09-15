@@ -21,6 +21,20 @@ library(data.table)
 
 ### 2. Preparing the data
 
+Remove temperatures less than -17C.  
+Make sure there are no missing data in the key variables coded as 9999,
+999, etc.  
+Generate a date variable using the functions as.Date() (hint: You will
+need the following to create a date paste(year, month, day, sep =
+“-”)).  
+Using the data.table::week function, keep the observations of the first
+week of the month.  
+Compute the mean by station of the variables temp, rh, wind.sp,
+vis.dist, dew.point, lat, lon, and elev.  
+Create a region variable for NW, SW, NE, SE based on lon = -98.00 and
+lat = 39.71 degrees.  
+Create a categorical variable for elevation as in the lecture slides.
+
 ``` r
 dim(met)
 ```
@@ -163,14 +177,19 @@ met_avg[!is.na(dew.point)] %>%
 ```
 
 ![](README_files/figure-gfm/unnamed-chunk-7-1.png)<!-- --> The west
-seems to have lower dew points on average.
+seems to have lower dew points on average. Additionally, the range of
+error in the west is much higher than in the east, where dew point
+readings seem to lie close to the mean.
 
 ### 7. Make a map showing the spatial trend in relative h in the US
 
-Make sure to remove NA Use leaflet() Make a colour palette with custom
-colours Use addMarkers to include the top 10 places in relative h (hint:
-this will be useful rank(-rh) \<= 10) Add a legend Describe trend in RH
-across the US
+Make sure to remove NA/  
+Use leaflet().  
+Make a colour palette with custom colours.  
+Use addMarkers to include the top 10 places in relative h (hint: this
+will be useful rank(-rh) \<= 10).  
+Add a legend.  
+Describe trend in RH across the US.
 
 ``` r
 top10rh <- met_avg[rank(-rh) <= 10]
@@ -201,3 +220,27 @@ rhmap
 ```
 
 ![](README_files/figure-gfm/unnamed-chunk-9-1.png)<!-- -->
+
+### 8. Use a ggplot extension
+
+Pick and extension (except cowplot) from here and make a plot of your
+choice using the met data (or met_avg).  
+Might want to try examples that come with the extension first
+(e.g. ggtech, gganimate, ggforce).
+
+``` r
+library(ggbeeswarm)
+
+met_avg[!is.na(dew.point)] %>%
+    ggplot(aes(x = region, y = dew.point, color = elev_cat)) + geom_beeswarm(size = 0.5) +
+    ggtitle("Beeswarm Plot")
+```
+
+![](README_files/figure-gfm/unnamed-chunk-10-1.png)<!-- --> The beeswarm
+plot is a hybrid between a violin plot and scatter plot. It helps
+visualize the density of the data at each point (similar to a violin
+plot), while still showing each data point individually. From this plot,
+it can be observed that dew points are higher for low elevations in the
+southeast, while the converse is true for the northeast. The southwest
+has about an equal distribution of dew points in both its elevation
+categories, and the northwest lacks data at low elevations.
