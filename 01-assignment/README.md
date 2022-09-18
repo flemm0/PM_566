@@ -1,7 +1,7 @@
 Assignment 01: Exploratory Data Analysis
 ================
 Flemming Wu
-2022-09-15
+2022-09-18
 
 #### We will work with air pollution data from the U.S. Environmental Protection Agency (EPA). The primary question you will answer is whether daily concentrations of PM 2.5 (particulate matter air pollution with aerodynamic diameter less than 2.5 m) have decreased in California over the last 15 years (from 2004 to 2019).
 
@@ -29,16 +29,18 @@ data_2019 <- data.table::fread("data_2019.csv")
 ```
 
 ``` r
-noquote(c("2004 dimensions: ", dim(data_2004)))
+paste("2004 data:", ncol(data_2004), "variables", nrow(data_2004),
+    "observations")
 ```
 
-    ## [1] 2004 dimensions:  19233             20
+    ## [1] "2004 data: 20 variables 19233 observations"
 
 ``` r
-noquote(c("2019 dimensions: ", dim(data_2019)))
+paste("2019 data:", ncol(data_2019), "variables", nrow(data_2019),
+    "observations")
 ```
 
-    ## [1] 2019 dimensions:  53156             20
+    ## [1] "2019 data: 20 variables 53156 observations"
 
 ``` r
 dim(data_2019)[1]/dim(data_2004)[1]
@@ -286,8 +288,6 @@ summary(data_2004$Daily.Mean.PM2.5.Concentration)
     ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
     ##   -0.10    6.00   10.10   13.13   16.30  251.00
 
-Looks like some observations in 2004 are negative.
-
 ``` r
 table(data_2004$Daily.Mean.PM2.5.Concentration) %>%
     head()
@@ -297,7 +297,7 @@ table(data_2004$Daily.Mean.PM2.5.Concentration) %>%
     ## -0.1    0  0.1  0.2  0.3  0.4 
     ##    1   11   15   20   27   32
 
-One observation for PM 2.5 concentration is negative.
+One observation for PM 2.5 concentration in 2004 is negative.
 
 ``` r
 quantile(data_2004$Daily.Mean.PM2.5.Concentration, seq(0, 1,
@@ -307,8 +307,8 @@ quantile(data_2004$Daily.Mean.PM2.5.Concentration, seq(0, 1,
     ##    0%   10%   20%   30%   40%   50%   60%   70%   80%   90%  100% 
     ##  -0.1   3.7   5.3   7.0   8.5  10.1  12.0  14.7  18.6  27.0 251.0
 
-Looks like 10% of the data lie between concentration levels of 27 and
-251.
+Looks like 10% of the 2004 data lie between high PM 2.5 concentration
+levels of 27 and 251.
 
 ``` r
 summary(data_2019$Daily.Mean.PM2.5.Concentration)
@@ -319,12 +319,12 @@ summary(data_2019$Daily.Mean.PM2.5.Concentration)
 
 ``` r
 table(data_2019$Daily.Mean.PM2.5.Concentration) %>%
-    head()
+    head(15)
 ```
 
     ## 
-    ## -2.2   -2 -1.9 -1.8 -1.7 -1.6 
-    ##    1   12   16   11   12   12
+    ## -2.2   -2 -1.9 -1.8 -1.7 -1.6 -1.5 -1.4 -1.3 -1.2 -1.1   -1 -0.9 -0.8 -0.7 
+    ##    1   12   16   11   12   12    8   11   10   16    9   12   10   11   15
 
 Looks like 2019 has many more PM 2.5 concentration observations that are
 below 0.
@@ -340,10 +340,9 @@ quantile(data_2019$Daily.Mean.PM2.5.Concentration, seq(0, 1,
 10% of the data in 2019 lie between concentration levels of 14.2 and
 120.9. Additionally, the maximum 2.5 concentration observation is less
 than half that of the 2004 data. This is plausible due to increase of
-effort to reduce air pollution levels.
-
-The EPA standard for PM 2.5 concentration post-1997 is 65 ug/m3 and was
-lowered to 35 ug/m3 since 2006.
+effort to reduce air pollution levels. For example, the EPA standard for
+PM 2.5 concentration post-1997 was 65 ug/m3 and was lowered to 35 ug/m3
+since 2006.  
 
 The negative PM 2.5 concentration levels pose a problem for answering
 the question and will be removed later on.
@@ -367,13 +366,13 @@ Concatenate data frames.
 
 ``` r
 df_all <- rbind(data_2004, data_2019)
+```
 
-names(df_all) <- make.names(names(df_all))
-names(df_all)[names(df_all) == "Daily.Mean.PM2.5.Concentration"] <- "PM2.5Concentration"
-names(df_all)[names(df_all) == "SITE_LATITUDE"] <- "lat"
-names(df_all)[names(df_all) == "SITE_LONGITUDE"] <- "lon"
+Change column names.
 
-df_all <- df_all[order(df_all$PM2.5Concentration)]  #Ascending order by PM 2.5
+``` r
+df_all <- rename(df_all, PM2.5Concentration = "Daily.Mean.PM2.5.Concentration",
+    lat = "SITE_LATITUDE", lon = "SITE_LONGITUDE")
 ```
 
 ##### 3. Create a basic map in leaflet() that shows the locations of the sites (make sure to use different colors for each year). Summarize the spatial distribution of the monitoring sites.
@@ -398,7 +397,7 @@ centers in Los Angeles, San Francisco, and San Diego.
 ##### 4. Check for any missing or implausible values of PM 2.5 in the combined dataset. Explore the proportions of each and provide a summary of any temporal patterns you see in these observations.
 
 ``` r
-sum(as.numeric(is.na(df_all$PM2.5Concentration)))
+sum(is.na(df_all$PM2.5Concentration))
 ```
 
     ## [1] 0
@@ -435,18 +434,18 @@ df_all %>%
 Check proportion of implausible data by year.
 
 ``` r
-noquote(c(sum(with(df_all, PM2.5Concentration < 0 & year == "2019"))/nrow(filter(df_all,
-    year == "2019")) * 100, "percent of 2019 data is negative"))
+paste(sum(with(df_all, PM2.5Concentration < 0 & year == "2019"))/nrow(filter(df_all,
+    year == "2019")) * 100, "percent of 2019 data is negative")
 ```
 
-    ## [1] 0.530513958913387                percent of 2019 data is negative
+    ## [1] "0.530513958913387 percent of 2019 data is negative"
 
 ``` r
-noquote(c(sum(with(df_all, PM2.5Concentration < 0 & year == "2004"))/nrow(filter(df_all,
-    year == "2004")) * 100, "percent of 2004 data is negative"))
+paste(sum(with(df_all, PM2.5Concentration < 0 & year == "2004"))/nrow(filter(df_all,
+    year == "2004")) * 100, "percent of 2004 data is negative")
 ```
 
-    ## [1] 0.00519939686996308              percent of 2004 data is negative
+    ## [1] "0.00519939686996308 percent of 2004 data is negative"
 
 For measurements of **concentration** of particulate matter in the air,
 it seems implausible to have a negative observations. Remove from the
@@ -493,8 +492,8 @@ ggplot(data = df_all) + geom_bar(mapping = aes(x = PM2.5Concentration,
 
 ![](README_files/figure-gfm/Plot%20data%20for%20whole%20state-1.png)<!-- -->
 Both the histograms for 2019 and 2004 data are right-skewed with a peak
-at around 2.5 concentration of 10, but the bars for the 2004 data are
-higher, with many observations above 2.5 concentration of 25.
+at around 2.5 concentration of 10, however, the 2004 data contains many
+more PM 2.5 concentration observations above 13.
 
 Plot PM 2.5 concentration by county.
 
@@ -508,39 +507,41 @@ ggplot(df_all, mapping = aes(x = COUNTY, y = PM2.5Concentration,
 From the plot, it can be seen that for many counties, there are many
 more high PM 2.5 concentration observations in 2004 than in 2019. Marin
 county holds the highest PM 2.5 concentration observation in the data
-set.
+set at above 250.
 
 Look at sites in Los Angeles County.
 
 ``` r
-filter(df_all, COUNTY == "Los Angeles") %>%
+lac <- df_all %>%
+    filter(COUNTY == "Los Angeles")
+
+lac %>%
     select(Site.Name) %>%
-    unique() %>%
-    arrange(Site.Name)
+    unique()
 ```
 
     ##                          Site.Name
-    ##  1:                               
-    ##  2:                          Azusa
-    ##  3:                        Burbank
-    ##  4:                        Compton
-    ##  5:                       Glendora
-    ##  6:      Lancaster-Division Street
-    ##  7:                          Lebec
+    ##  1:                          Azusa
+    ##  2:                        Burbank
+    ##  3:  Los Angeles-North Main Street
+    ##  4:                         Reseda
+    ##  5:                        Lynwood
+    ##  6:                               
+    ##  7:                       Pasadena
     ##  8:             Long Beach (North)
     ##  9:             Long Beach (South)
-    ## 10: Long Beach-Route 710 Near Road
-    ## 11:  Los Angeles-North Main Street
-    ## 12:                        Lynwood
-    ## 13:                       Pasadena
+    ## 10:      Lancaster-Division Street
+    ## 11:                          Lebec
+    ## 12:                       Glendora
+    ## 13:                        Compton
     ## 14:                 Pico Rivera #2
-    ## 15:                         Reseda
+    ## 15: Long Beach-Route 710 Near Road
     ## 16:                  Santa Clarita
 
 One of the sites is missing a name.
 
 ``` r
-filter(df_all, COUNTY == "Los Angeles" & Site.Name == "") %>%
+filter(lac, Site.Name == "") %>%
     select(Site.Name, lat, lon) %>%
     unique()
 ```
@@ -562,15 +563,14 @@ Rivera”. Will update this information in the data set to accurately
 reflect the site location.
 
 ``` r
-df_la <- filter(df_all, COUNTY == "Los Angeles")
-df_la$Site.Name <- replace(df_la$Site.Name, df_la$Site.Name ==
-    "", "Pico Rivera")
+lac$Site.Name <- replace(lac$Site.Name, lac$Site.Name == "",
+    "Pico Rivera")
 ```
 
 Plotting sites in Los Angeles County.
 
 ``` r
-ggplot(data = df_la, mapping = aes(x = Site.Name, y = PM2.5Concentration,
+ggplot(data = lac, mapping = aes(x = Site.Name, y = PM2.5Concentration,
     fill = year)) + geom_boxplot(outlier.size = 0.1) + theme(axis.text.x = element_text(angle = 90,
     vjust = 1, hjust = 1))
 ```
