@@ -20,6 +20,9 @@ This markdown document should be rendered using github_document document.
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+Load the data.table (and the dtplyr and dplyr packages if you plan to work with those).
+
+Load the met data from https://raw.githubusercontent.com/USCbiostats/data-science-data/master/02_met/met_all.gz, and also the station data. For the later, you can use the code we used during lecture to pre-process the stations data:
 
 ```{r Load libraries, message = FALSE}
 library(data.table)
@@ -29,7 +32,7 @@ library(lubridate)
 ```
 
 
-```{r Download and clean data, message = FALSE}
+```{r Download and clean data, message = FALSE, cache = TRUE}
 # Load in the met_all data
 met <- fread("../04-lab/met_all.gz")
 met <- met[met$temp > -17][elev == 9999.0, elev := NA]
@@ -59,6 +62,7 @@ str(stations)
 str(met)
 ```
 
+Merge the data as we did during the lecture.
 
 ```{r Merging the data}
 dat <- merge(
@@ -80,8 +84,39 @@ What is the median station in terms of temperature, wind speed, and atmospheric 
 \
 Knit the document, commit your changes, and Save it on GitHub. Don’t forget to add README.md to the tree, the first time you render it.
 
+```{r Computes the mean by weather station}
+#Summarize the average temperature, wind speed, and atmospheric pressure for each station 
+(station_averages <- met[, .(
+  temp = mean(temp, na.rm = TRUE),
+  wind.sp = mean(wind.sp, na.rm = TRUE),
+  atm.press = mean(atm.press, na.rm = TRUE)
+), by = USAFID])
+```
+The above computes the mean by weather station. Now let's compute the median value for each variable.
+
+```{r Take median of all the averages of the different stations}
+(statmedians <- station_averages[ , .(
+      temp50        = median(temp, na.rm = TRUE),
+      windsp50      = median(wind.sp, na.rm = TRUE),
+      atmpress50    = median(atm.press, na.rm = TRUE)
+)])
+
+#summary(station_averages[, temp])
+```
+
+A helpful function 'which.min()':
+```{r Compute the differences and add new variable to station averages data}
+station_averages[ , 
+                  temp_dist50 := abs(temp - statmedians$temp50)][order(temp_dist50)]
+                  #windsp_dist5050 := abs(wind.sp - statmedian$windsp50),
+                  #atmpress_dist50 := abs(atm.press - statmedian$atmpress50)]
+station_averages[ which.min(temp_dist50)]
+```
+
+
 ```{r}
-quantile(dat[, temp])
+summary(dat[, wind.sp], na.rm = TRUE)
+summary(dat[, atm.press], na.rm = TRUE)
 ```
 
 
