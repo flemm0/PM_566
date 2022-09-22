@@ -156,7 +156,12 @@ From this plot, it is evident that there are more sites recording PM 2.5 concent
 ```{r}
 sum(is.na(df_all$PM2.5Concentration))
 ```
-No missing values in data frame.
+No missing values in PM 2.5 Concentration.
+
+```{r}
+colSums(is.na(df_all))
+```
+CBSA code column is the only column that contains NA values. Will keep this in mind if variable must be used further on.
 
 
 Take a closer look at sites giving negative PM 2.5 concentration readings:
@@ -257,7 +262,7 @@ I validated this by checking the AQS website for a monitoring station at this lo
 
 ```{r Replacing empty site name with "Pico Rivera}
 
-lac$Site.Name <- replace(lac$Site.Name, lac$Site.Name == "", "Pico Rivera")
+lac$Site.Name <- replace(lac$Site.Name, lac$Site.Name == "", "Pico Rivera*")
 ```
 
 Plotting sites in Los Angeles County.

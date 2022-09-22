@@ -1,7 +1,7 @@
 Assignment 01: Exploratory Data Analysis
 ================
 Flemming Wu
-2022-09-18
+2022-09-22
 
 #### We will work with air pollution data from the U.S. Environmental Protection Agency (EPA). The primary question you will answer is whether daily concentrations of PM 2.5 (particulate matter air pollution with aerodynamic diameter less than 2.5 m) have decreased in California over the last 15 years (from 2004 to 2019).
 
@@ -402,7 +402,27 @@ sum(is.na(df_all$PM2.5Concentration))
 
     ## [1] 0
 
-No missing values in data frame.
+No missing values in PM 2.5 Concentration.
+
+``` r
+colSums(is.na(df_all))
+```
+
+    ##               Date             Source            Site.ID                POC 
+    ##                  0                  0                  0                  0 
+    ## PM2.5Concentration              UNITS    DAILY_AQI_VALUE          Site.Name 
+    ##                  0                  0                  0                  0 
+    ##    DAILY_OBS_COUNT   PERCENT_COMPLETE AQS_PARAMETER_CODE AQS_PARAMETER_DESC 
+    ##                  0                  0                  0                  0 
+    ##          CBSA_CODE          CBSA_NAME         STATE_CODE              STATE 
+    ##               5434                  0                  0                  0 
+    ##        COUNTY_CODE             COUNTY                lat                lon 
+    ##                  0                  0                  0                  0 
+    ##               year 
+    ##                  0
+
+CBSA code column is the only column that contains NA values. Will keep
+this in mind if variable must be used further on.
 
 Take a closer look at sites giving negative PM 2.5 concentration
 readings:
@@ -564,7 +584,7 @@ reflect the site location.
 
 ``` r
 lac$Site.Name <- replace(lac$Site.Name, lac$Site.Name == "",
-    "Pico Rivera")
+    "Pico Rivera*")
 ```
 
 Plotting sites in Los Angeles County.
