@@ -86,38 +86,42 @@ Knit the document, commit your changes, and Save it on GitHub. Don’t forget to
 
 ```{r Computes the mean by weather station}
 #Summarize the average temperature, wind speed, and atmospheric pressure for each station 
-(station_averages <- met[, .(
+(station_averages <- dat[, .(
   temp = mean(temp, na.rm = TRUE),
   wind.sp = mean(wind.sp, na.rm = TRUE),
   atm.press = mean(atm.press, na.rm = TRUE)
-), by = USAFID])
+), by = .(USAFID, STATE)])
 ```
 The above computes the mean by weather station. Now let's compute the median value for each variable.
 
 ```{r Take median of all the averages of the different stations}
-(statmedians <- station_averages[ , .(
+(us_medians <- dat[ , .(
       temp50        = median(temp, na.rm = TRUE),
       windsp50      = median(wind.sp, na.rm = TRUE),
       atmpress50    = median(atm.press, na.rm = TRUE)
 )])
-
-#summary(station_averages[, temp])
 ```
 
-A helpful function 'which.min()':
+Now create a new column in the station averages data table that holds the differences between the station averages and the mean across the entire US.
+
 ```{r Compute the differences and add new variable to station averages data}
-station_averages[ , 
-                  temp_dist50 := abs(temp - statmedians$temp50)][order(temp_dist50)]
-                  #windsp_dist5050 := abs(wind.sp - statmedian$windsp50),
-                  #atmpress_dist50 := abs(atm.press - statmedian$atmpress50)]
-station_averages[ which.min(temp_dist50)]
+(station_averages <- station_averages[,
+                 c("temp50_dist", "wind.sp50_dist", "atmpress50_dist") := 
+                     .(abs(temp - us_medians$temp50), 
+                       abs(wind.sp - us_medians$windsp50), 
+                       abs(atm.press - us_medians$atmpress50))
+                 ][order(temp50_dist, wind.sp50_dist, atmpress50_dist)])
+
 ```
 
-
-```{r}
-summary(dat[, wind.sp], na.rm = TRUE)
-summary(dat[, atm.press], na.rm = TRUE)
+A helpful function 'which.min()' to find the station that holds the closest average readings to the median of the whole data set for each of the three variables.
+```{r }
+station_averages[which.min(temp50_dist)] #median station in terms of temperature
+station_averages[which.min(wind.sp50_dist)] #median station in terms of wind speed
+station_averages[which.min(atmpress50_dist)] #median station in terms of atmospheric pressure
 ```
+The stations closest to national median in temperature, wind speed, and atmospheric pressure seem to be spread around the country, and not consolidated in one state or region.
+
 
 
 
@@ -126,7 +130,64 @@ Just like the previous question, you are asked to identify what is the most repr
 
 Knit the doc and save it on GitHub.
 
+```{r Calculate medians across states for each of the three variables}
+(state_medians <- dat[ , .(
+      temp50        = median(temp, na.rm = TRUE),
+      windsp50      = median(wind.sp, na.rm = TRUE),
+      atmpress50    = median(atm.press, na.rm = TRUE)),
+      by = STATE])
+```
 
+```{r Merge state medians back with station averages data table}
+#Remove distance columns from question 1
+station_averages[, c("temp50_dist", "wind.sp50_dist", "atmpress50_dist") := NULL]
+
+
+#Merge state median values back with station averages to add three new columns
+(station_averages <- merge(
+  x = station_averages,
+  y = state_medians,
+  by.x = "STATE",
+  by.y = "STATE",
+  all.x = TRUE,
+  all.y = FALSE
+))
+
+```
+
+
+```{r Calculate observation minus the median for each station in each state}
+(station_averages <- station_averages[,
+                 c("temp50_dist", "wind.sp50_dist", "atmpress50_dist") := 
+                     .(abs(temp - temp50), 
+                       abs(wind.sp - windsp50), 
+                       abs(atm.press - atmpress50))
+                 ])
+
+
+#(station_averages[, temp50_dist := abs(temp - temp50)])
+#station_averages[, wind.sp50_dist := abs(wind.sp - wind.sp50)]
+#station_averages[, atm.press50_dist := abs(atm.press - atm.press50)]
+
+```
+
+```{r Compute euclidian distances}
+(station_averages[ , eucdist := sqrt(temp50_dist^2 + wind.sp50_dist^2 + atmpress50_dist^2)])
+```
+
+
+```{r Group by state and compute min of each group}
+#Group by state, and compute min on eucdist column, which will be the .SD column
+#Assign to temporary table
+state_eucdist <- station_averages[, lapply(.SD, min, na.rm = T), by = STATE, .SDcols = c("eucdist")]
+
+#search the euclidean distances in the station averages to get the USAFID associated with the stations of interest
+station_averages <- station_averages[eucdist %in% state_eucdist[, eucdist]]
+```
+
+```{r}
+merge(station_averages, dat[ , .(STATE, lat, lon)], by.x = "STATE", by.y = "STATE", all.y = FALSE)
+```
 
 
 
@@ -135,6 +196,43 @@ For each state, identify what is the station that is closest to the mid-point of
 
 Knit the doc and save it on GitHub.
 
+```{r Finding the GEOGRAPHIC midpoint of each state}
+#Find the physical/geographic midpoint of each state using median of the longitudes and latitudes
+
+(state_midpoints <- dat[,
+                   .(
+                     lat50 = quantile(lat, prob = 0.5, na.rm = TRUE),
+                     lon50 = quantile(lon, prob = 0.5, na.rm = TRUE)
+                   ),
+                   by = "STATE"])
+
+#Merge back to original datatable to obtain station numbers
+(state_midpoints <- merge(
+  x = state_midpoints,
+  y = dat,
+  by.x = "STATE",
+  by.y = "STATE"
+))
+
+#Group new data frame by station
+(state_midpoints <- state_midpoints[, .(STATE, lat50, lon50, lat, lon), by = "USAFID"])
+#Calculate distance from state midpoint for each station
+state_midpoints[, c("lat50_dist", "lon50_dist") := 
+                  .(abs(lat - lat50), abs(lon - lon50))]
+
+state_midpoints[, eucdist := sqrt(lat50_dist^2 + lon50_dist^2)]
+
+(state_midpoints <- state_midpoints[, .SD[which.min(eucdist)], by = "STATE"])
+```
+
+```{r Merge station_averages and state_midpoints to create plot}
+
+#plot_data <- rbind(state_midpoints[, .(STATE, lat, lon)], station_averages[, .(STATE, lat, lon)])
+
+#Need to create new column for indicating if it is an average or midpoint station
+
+
+```
 
 
 
@@ -149,6 +247,14 @@ Mid: temp >= 20 and temp < 25\
 High: temp >= 25\
 Once you are done with that, you can compute the following:\
 \
+```{r}
+temp_summary <- dat[, .(avg_temp = mean(temp)), by = STATE]
+
+(temp_summary[, temp_factor := fifelse(avg_temp < 20, "low", 
+                             fifelse(avg_temp >= 20 & avg_temp < 25, "mid", "high"))])
+
+```
+
 Number of entries (records),\
 Number of NA entries,\
 Number of stations,\
