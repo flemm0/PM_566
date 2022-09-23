@@ -82,6 +82,8 @@ individual <- fread("individual.csv")
 regional <- fread("regional.csv")
 ```
 
+###### 1. After merging the data, make sure you don’t have any duplicates by counting the number of rows. Make sure it matches.
+
 Merge data tables and ensure dimensions are correct.
 
 ``` r
@@ -114,153 +116,69 @@ Impute missing values with averages within variables “male” and
 # get columns that have na count greater than 0, and pass
 # them into a vector
 cols <- names(which(colSums(is.na(dat)) > 0))
-
-
-# subset data table for hispanic males and compute averages
-# on the columns of interest
-dat[male == 1 & hispanic == 1, lapply(.SD, mean, na.rm = TRUE),
-    .SDcols = cols]
+cols
 ```
 
-    ##      agepft   height   weight      bmi    asthma father_asthma mother_asthma
-    ## 1: 9.966942 138.5984 82.76707 19.41148 0.1601562    0.08403361     0.1067194
-    ##       wheeze  hayfever   allergy educ_parent     smoke  gasstove      fev
-    ## 1: 0.3534137 0.1744681 0.2540323    2.423868 0.1501976 0.8156863 2120.266
-    ##         fvc     mmef  no_24hr pm2_5_fr
-    ## 1: 2443.876 2447.494 15.86585 19.94291
+    ##  [1] "agepft"        "height"        "weight"        "bmi"          
+    ##  [5] "asthma"        "father_asthma" "mother_asthma" "wheeze"       
+    ##  [9] "hayfever"      "allergy"       "educ_parent"   "smoke"        
+    ## [13] "gasstove"      "fev"           "fvc"           "mmef"         
+    ## [17] "no_24hr"       "pm2_5_fr"
 
 ``` r
-dat2 <- copy(dat)
-
-dat2[, m_bmi := mean(bmi, na.rm = TRUE), by = .(male, hispanic)]
-
-in_names  <- cols
+#select most important columns to impute NAs and assign to "in_names"
+in_names  <- c("agepft", "height", "weight", "bmi", "smoke", "asthma", "gasstove", "fev")
 out_names <- paste0(in_names, "_avg")
-(dat3 <- merge(
+dat <- merge(
   
+  #group by variables hispanic and male, then compute the mean of in_names for each group and assign to temporary variable x
   x = dat[,
   setNames(lapply(.SD, mean, na.rm = TRUE), out_names),
   .SDcols = in_names, 
   by  = .(hispanic, male)
   ],
   
-  y = dat2,
+  #merge temporary variable x back with main data table to add new columns containing averages
+  y = dat,
   by.x = c("hispanic", "male"),
   by.y = c("hispanic", "male")
-))
+)
+
+head(dat, n = 3)
 ```
 
-    ##       hispanic male agepft_avg height_avg weight_avg  bmi_avg asthma_avg
-    ##    1:        0    0   9.849789   138.9720   77.39564 18.05281  0.1239193
-    ##    2:        0    0   9.849789   138.9720   77.39564 18.05281  0.1239193
-    ##    3:        0    0   9.849789   138.9720   77.39564 18.05281  0.1239193
-    ##    4:        0    0   9.849789   138.9720   77.39564 18.05281  0.1239193
-    ##    5:        0    0   9.849789   138.9720   77.39564 18.05281  0.1239193
-    ##   ---                                                                   
-    ## 1196:        1    1   9.966942   138.5984   82.76707 19.41148  0.1601562
-    ## 1197:        1    1   9.966942   138.5984   82.76707 19.41148  0.1601562
-    ## 1198:        1    1   9.966942   138.5984   82.76707 19.41148  0.1601562
-    ## 1199:        1    1   9.966942   138.5984   82.76707 19.41148  0.1601562
-    ## 1200:        1    1   9.966942   138.5984   82.76707 19.41148  0.1601562
-    ##       father_asthma_avg mother_asthma_avg wheeze_avg hayfever_avg allergy_avg
-    ##    1:        0.08750000         0.1190476  0.3153153    0.1920732   0.2991202
-    ##    2:        0.08750000         0.1190476  0.3153153    0.1920732   0.2991202
-    ##    3:        0.08750000         0.1190476  0.3153153    0.1920732   0.2991202
-    ##    4:        0.08750000         0.1190476  0.3153153    0.1920732   0.2991202
-    ##    5:        0.08750000         0.1190476  0.3153153    0.1920732   0.2991202
-    ##   ---                                                                        
-    ## 1196:        0.08403361         0.1067194  0.3534137    0.1744681   0.2540323
-    ## 1197:        0.08403361         0.1067194  0.3534137    0.1744681   0.2540323
-    ## 1198:        0.08403361         0.1067194  0.3534137    0.1744681   0.2540323
-    ## 1199:        0.08403361         0.1067194  0.3534137    0.1744681   0.2540323
-    ## 1200:        0.08403361         0.1067194  0.3534137    0.1744681   0.2540323
-    ##       educ_parent_avg smoke_avg gasstove_avg  fev_avg  fvc_avg mmef_avg
-    ##    1:        3.045977 0.1522989    0.7291066 1945.743 2198.915 2365.589
-    ##    2:        3.045977 0.1522989    0.7291066 1945.743 2198.915 2365.589
-    ##    3:        3.045977 0.1522989    0.7291066 1945.743 2198.915 2365.589
-    ##    4:        3.045977 0.1522989    0.7291066 1945.743 2198.915 2365.589
-    ##    5:        3.045977 0.1522989    0.7291066 1945.743 2198.915 2365.589
-    ##   ---                                                                  
-    ## 1196:        2.423868 0.1501976    0.8156863 2120.266 2443.876 2447.494
-    ## 1197:        2.423868 0.1501976    0.8156863 2120.266 2443.876 2447.494
-    ## 1198:        2.423868 0.1501976    0.8156863 2120.266 2443.876 2447.494
-    ## 1199:        2.423868 0.1501976    0.8156863 2120.266 2443.876 2447.494
-    ## 1200:        2.423868 0.1501976    0.8156863 2120.266 2443.876 2447.494
-    ##       no_24hr_avg pm2_5_fr_avg townname  sid race    agepft height weight
-    ##    1:    15.53682     20.54245   Alpine  835    W 10.099932    143     69
-    ##    2:    15.53682     20.54245   Alpine  840    W  9.965777    146     78
-    ##    3:    15.53682     20.54245   Alpine  860    W  9.946612    142     64
-    ##    4:    15.53682     20.54245   Alpine  865    W 10.039699    162    140
-    ##    5:    15.53682     20.54245   Alpine  873    W  9.804244    140    101
-    ##   ---                                                                    
-    ## 1196:    15.86585     19.94291   Upland 1816    W  9.631759    134     60
-    ## 1197:    15.86585     19.94291   Upland 1833    W  9.453799    139     73
-    ## 1198:    15.86585     19.94291   Upland 1839    M  9.776865    141     85
-    ## 1199:    15.86585     19.94291   Upland 1850    O  9.338809    143     86
-    ## 1200:    15.86585     19.94291   Upland 1862    W        NA     NA     NA
-    ##            bmi asthma active_asthma father_asthma mother_asthma wheeze hayfever
-    ##    1: 15.33749      0             0             0             0      0        0
-    ##    2: 16.63283      0             0             0             0      0        0
-    ##    3: 14.42715      0             0             0             0      0        0
-    ##    4: 24.24797      1             1             0             0      1        0
-    ##    5: 23.42301      0             0             0             0      0        0
-    ##   ---                                                                          
-    ## 1196: 15.18864      0             0             0             0      0        0
-    ## 1197: 17.17397      0             0             0             0      1        0
-    ## 1198: 19.43381      0             0             0             0     NA        1
-    ## 1199: 19.11629      0             0             0             0      1       NA
-    ## 1200:       NA      0             0             1             0      1        0
-    ##       allergy educ_parent smoke pets gasstove      fev      fvc     mmef
-    ##    1:       1           3     0    1        0 2529.276 2826.316 3406.579
-    ##    2:       0          NA    NA    0       NA 2466.791 2638.221 3466.464
-    ##    3:       0           2     0    0        1 1759.866 2194.314 1695.652
-    ##    4:       1           3     0    1        1 2583.934 3567.541 2071.475
-    ##    5:       0           3     0    1        0 2226.421 2406.020 2734.114
-    ##   ---                                                                   
-    ## 1196:       1           3     0    1        1 1783.168 2001.980 2126.733
-    ## 1197:       0           5     0    0        1 2000.662 2255.960 2396.026
-    ## 1198:       0           3     0    1        1 2279.402 2537.542 2641.196
-    ## 1199:       1           3    NA    1        1 2428.672 2653.055 3489.301
-    ## 1200:       0           4     0    1        0       NA       NA       NA
-    ##       pm25_mass pm25_so4 pm25_no3 pm25_nh4 pm25_oc pm25_ec pm25_om pm10_oc
-    ##    1:      8.74     1.73     1.59     0.88    2.54    0.48    3.04    3.25
-    ##    2:      8.74     1.73     1.59     0.88    2.54    0.48    3.04    3.25
-    ##    3:      8.74     1.73     1.59     0.88    2.54    0.48    3.04    3.25
-    ##    4:      8.74     1.73     1.59     0.88    2.54    0.48    3.04    3.25
-    ##    5:      8.74     1.73     1.59     0.88    2.54    0.48    3.04    3.25
-    ##   ---                                                                     
-    ## 1196:     22.46     2.65     7.75     2.96    6.49    1.19    7.79    8.32
-    ## 1197:     22.46     2.65     7.75     2.96    6.49    1.19    7.79    8.32
-    ## 1198:     22.46     2.65     7.75     2.96    6.49    1.19    7.79    8.32
-    ## 1199:     22.46     2.65     7.75     2.96    6.49    1.19    7.79    8.32
-    ## 1200:     22.46     2.65     7.75     2.96    6.49    1.19    7.79    8.32
-    ##       pm10_ec pm10_tc formic acetic  hcl hno3 o3_max o3106 o3_24   no2  pm10
-    ##    1:    0.49    3.75   1.03   2.49 0.41 1.98  65.82 55.05 41.23 12.18 24.73
-    ##    2:    0.49    3.75   1.03   2.49 0.41 1.98  65.82 55.05 41.23 12.18 24.73
-    ##    3:    0.49    3.75   1.03   2.49 0.41 1.98  65.82 55.05 41.23 12.18 24.73
-    ##    4:    0.49    3.75   1.03   2.49 0.41 1.98  65.82 55.05 41.23 12.18 24.73
-    ##    5:    0.49    3.75   1.03   2.49 0.41 1.98  65.82 55.05 41.23 12.18 24.73
-    ##   ---                                                                       
-    ## 1196:    1.22    9.54   2.67   4.73 0.46 4.03  63.83 46.50 22.20 37.97 40.80
-    ## 1197:    1.22    9.54   2.67   4.73 0.46 4.03  63.83 46.50 22.20 37.97 40.80
-    ## 1198:    1.22    9.54   2.67   4.73 0.46 4.03  63.83 46.50 22.20 37.97 40.80
-    ## 1199:    1.22    9.54   2.67   4.73 0.46 4.03  63.83 46.50 22.20 37.97 40.80
-    ## 1200:    1.22    9.54   2.67   4.73 0.46 4.03  63.83 46.50 22.20 37.97 40.80
-    ##       no_24hr pm2_5_fr iacid oacid total_acids       lon      lat    m_bmi
-    ##    1:    2.48    10.28  2.39  3.52        5.50 -116.7664 32.83505 18.05281
-    ##    2:    2.48    10.28  2.39  3.52        5.50 -116.7664 32.83505 18.05281
-    ##    3:    2.48    10.28  2.39  3.52        5.50 -116.7664 32.83505 18.05281
-    ##    4:    2.48    10.28  2.39  3.52        5.50 -116.7664 32.83505 18.05281
-    ##    5:    2.48    10.28  2.39  3.52        5.50 -116.7664 32.83505 18.05281
-    ##   ---                                                                     
-    ## 1196:   18.48    27.73  4.49  7.40       11.43 -117.6484 34.09751 19.41148
-    ## 1197:   18.48    27.73  4.49  7.40       11.43 -117.6484 34.09751 19.41148
-    ## 1198:   18.48    27.73  4.49  7.40       11.43 -117.6484 34.09751 19.41148
-    ## 1199:   18.48    27.73  4.49  7.40       11.43 -117.6484 34.09751 19.41148
-    ## 1200:   18.48    27.73  4.49  7.40       11.43 -117.6484 34.09751 19.41148
+    ##    hispanic male agepft_avg height_avg weight_avg  bmi_avg smoke_avg asthma_avg
+    ## 1:        0    0   9.849789    138.972   77.39564 18.05281 0.1522989  0.1239193
+    ## 2:        0    0   9.849789    138.972   77.39564 18.05281 0.1522989  0.1239193
+    ## 3:        0    0   9.849789    138.972   77.39564 18.05281 0.1522989  0.1239193
+    ##    gasstove_avg  fev_avg townname sid race    agepft height weight      bmi
+    ## 1:    0.7291066 1945.743   Alpine 835    W 10.099932    143     69 15.33749
+    ## 2:    0.7291066 1945.743   Alpine 840    W  9.965777    146     78 16.63283
+    ## 3:    0.7291066 1945.743   Alpine 860    W  9.946612    142     64 14.42715
+    ##    asthma active_asthma father_asthma mother_asthma wheeze hayfever allergy
+    ## 1:      0             0             0             0      0        0       1
+    ## 2:      0             0             0             0      0        0       0
+    ## 3:      0             0             0             0      0        0       0
+    ##    educ_parent smoke pets gasstove      fev      fvc     mmef pm25_mass
+    ## 1:           3     0    1        0 2529.276 2826.316 3406.579      8.74
+    ## 2:          NA    NA    0       NA 2466.791 2638.221 3466.464      8.74
+    ## 3:           2     0    0        1 1759.866 2194.314 1695.652      8.74
+    ##    pm25_so4 pm25_no3 pm25_nh4 pm25_oc pm25_ec pm25_om pm10_oc pm10_ec pm10_tc
+    ## 1:     1.73     1.59     0.88    2.54    0.48    3.04    3.25    0.49    3.75
+    ## 2:     1.73     1.59     0.88    2.54    0.48    3.04    3.25    0.49    3.75
+    ## 3:     1.73     1.59     0.88    2.54    0.48    3.04    3.25    0.49    3.75
+    ##    formic acetic  hcl hno3 o3_max o3106 o3_24   no2  pm10 no_24hr pm2_5_fr
+    ## 1:   1.03   2.49 0.41 1.98  65.82 55.05 41.23 12.18 24.73    2.48    10.28
+    ## 2:   1.03   2.49 0.41 1.98  65.82 55.05 41.23 12.18 24.73    2.48    10.28
+    ## 3:   1.03   2.49 0.41 1.98  65.82 55.05 41.23 12.18 24.73    2.48    10.28
+    ##    iacid oacid total_acids       lon      lat
+    ## 1:  2.39  3.52         5.5 -116.7664 32.83505
+    ## 2:  2.39  3.52         5.5 -116.7664 32.83505
+    ## 3:  2.39  3.52         5.5 -116.7664 32.83505
 
 ``` r
-dat3[,
+#impute NAs with averages from _avg columns
+dat[,
      c("agepft", "height", "weight", "bmi", "smoke", "asthma", "gasstove", "fev") :=
      .(
        fifelse(is.na(agepft), agepft_avg, agepft),
@@ -274,57 +192,109 @@ dat3[,
      )
      ]
 
-
-dat3[, ..cols]
+#check that there are no more NAs in the important columns
+sum(is.na(dat[, ..in_names]))
 ```
 
-    ##          agepft   height    weight      bmi asthma father_asthma mother_asthma
-    ##    1: 10.099932 143.0000  69.00000 15.33749      0             0             0
-    ##    2:  9.965777 146.0000  78.00000 16.63283      0             0             0
-    ##    3:  9.946612 142.0000  64.00000 14.42715      0             0             0
-    ##    4: 10.039699 162.0000 140.00000 24.24797      1             0             0
-    ##    5:  9.804244 140.0000 101.00000 23.42301      0             0             0
-    ##   ---                                                                         
-    ## 1196:  9.631759 134.0000  60.00000 15.18864      0             0             0
-    ## 1197:  9.453799 139.0000  73.00000 17.17397      0             0             0
-    ## 1198:  9.776865 141.0000  85.00000 19.43381      0             0             0
-    ## 1199:  9.338809 143.0000  86.00000 19.11629      0             0             0
-    ## 1200:  9.966942 138.5984  82.76707 19.41148      0             1             0
-    ##       wheeze hayfever allergy educ_parent     smoke  gasstove      fev      fvc
-    ##    1:      0        0       1           3 0.0000000 0.0000000 2529.276 2826.316
-    ##    2:      0        0       0          NA 0.1522989 0.7291066 2466.791 2638.221
-    ##    3:      0        0       0           2 0.0000000 1.0000000 1759.866 2194.314
-    ##    4:      1        0       1           3 0.0000000 1.0000000 2583.934 3567.541
-    ##    5:      0        0       0           3 0.0000000 0.0000000 2226.421 2406.020
-    ##   ---                                                                          
-    ## 1196:      0        0       1           3 0.0000000 1.0000000 1783.168 2001.980
-    ## 1197:      1        0       0           5 0.0000000 1.0000000 2000.662 2255.960
-    ## 1198:     NA        1       0           3 0.0000000 1.0000000 2279.402 2537.542
-    ## 1199:      1       NA       1           3 0.1501976 1.0000000 2428.672 2653.055
-    ## 1200:      1        0       0           4 0.0000000 0.0000000 2120.266       NA
-    ##           mmef no_24hr pm2_5_fr
-    ##    1: 3406.579    2.48    10.28
-    ##    2: 3466.464    2.48    10.28
-    ##    3: 1695.652    2.48    10.28
-    ##    4: 2071.475    2.48    10.28
-    ##    5: 2734.114    2.48    10.28
-    ##   ---                          
-    ## 1196: 2126.733   18.48    27.73
-    ## 1197: 2396.026   18.48    27.73
-    ## 1198: 2641.196   18.48    27.73
-    ## 1199: 3489.301   18.48    27.73
-    ## 1200:       NA   18.48    27.73
+    ## [1] 0
+
+###### 2. Create a new categorical variable named “obesity_level” using the BMI measurement (underweight BMI\<14; normal BMI 14-22; overweight BMI 22-24; obese BMI\>24). To make sure the variable is rightly coded, create a summary table that contains the minimum BMI, maximum BMI, and the total number of observations per category.
 
 ``` r
-#dat2[rowSums(is.na(dat2)) > 0, ]
+# removing the averages columns created for previous step
+dat <- dat %>%
+    select(!ends_with("_avg")) %>%
+    collect()
+dat <- as.data.table(dat)
+
+dat[, `:=`(obesity_level, fifelse(bmi < 14, "underweight", fifelse(bmi >=
+    14 & bmi < 22, "normal", fifelse(bmi >= 22 & bmi <= 24, "overweight",
+    "obese"))))]
 ```
+
+Create summary table to verify new column.
+
+``` r
+dat[, .(min_bmi = min(bmi), max_bmi = max(bmi)), by = obesity_level][order(min_bmi)]
+```
+
+    ##    obesity_level  min_bmi  max_bmi
+    ## 1:   underweight 11.29640 13.98601
+    ## 2:        normal 14.00380 21.96387
+    ## 3:    overweight 22.02353 23.99650
+    ## 4:         obese 24.00647 41.26613
+
+###### 3. Create another categorical variable named “smoke_gas_exposure” that summarizes “Second Hand Smoke” and “Gas Stove.” The variable should have four categories in total.
+
+``` r
+dat[, `:=`(smoke_gas_exposure, fifelse(smoke > 0 & gasstove >
+    0, "both", fifelse(smoke == 0 & gasstove > 0, "gas", fifelse(smoke >
+    0 & gasstove == 0, "smoke", "neither"))))]
+```
+
+###### 4. Create four summary tables showing the average (or proportion, if binary) and sd of “Forced expiratory volume in 1 second (ml)” and asthma indicator by town, sex, obesity level, and “smoke_gas_exposure.”
+
+``` r
+# fev and asthma by town name
+dat[, .(avg_fev = mean(fev), std_fev = sd(fev), avg_asthma = mean(asthma),
+    asthma_std = sd(asthma)), by = townname]
+```
+
+    ##          townname  avg_fev  std_fev avg_asthma asthma_std
+    ##  1:        Alpine 2087.101 291.1768  0.1144423  0.3139348
+    ##  2:    Atascadero 2075.897 324.0935  0.2528408  0.4340107
+    ##  3: Lake Elsinore 2038.849 303.6956  0.1274366  0.3255095
+    ##  4:  Lake Gregory 2084.700 319.9593  0.1512392  0.3585609
+    ##  5:     Lancaster 2003.044 317.1298  0.1640054  0.3674206
+    ##  6:        Lompoc 2034.354 351.0454  0.1142335  0.3139431
+    ##  7:    Long Beach 1985.861 319.4625  0.1359886  0.3370219
+    ##  8:     Mira Loma 1985.202 324.9634  0.1582359  0.3572088
+    ##  9:     Riverside 1989.881 277.5065  0.1100000  0.3144660
+    ## 10:     San Dimas 2026.794 318.7845  0.1712392  0.3771647
+    ## 11:   Santa Maria 2025.750 312.1725  0.1348240  0.3372912
+    ## 12:        Upland 2024.266 343.1637  0.1212392  0.3263737
+
+``` r
+# fev and asthma by sex
+dat[, .(avg_fev = mean(fev), std_fev = sd(fev), avg_asthma = mean(asthma),
+    asthma_std = sd(asthma)), by = male]
+```
+
+    ##    male  avg_fev  std_fev avg_asthma asthma_std
+    ## 1:    0 1958.911 311.9181  0.1208035  0.3224043
+    ## 2:    1 2103.787 307.5123  0.1726819  0.3728876
+
+``` r
+# fev and asthma by obesity level
+dat[, .(avg_fev = mean(fev), std_fev = sd(fev), avg_asthma = mean(asthma),
+    asthma_std = sd(asthma)), by = obesity_level]
+```
+
+    ##    obesity_level  avg_fev  std_fev avg_asthma asthma_std
+    ## 1:        normal 1999.794 295.1964 0.14036063  0.3426863
+    ## 2:         obese 2266.154 325.4710 0.20819643  0.4034416
+    ## 3:    overweight 2224.322 317.4261 0.16409910  0.3687886
+    ## 4:   underweight 1698.327 303.3983 0.08571429  0.2840286
+
+``` r
+# fev and asthma by smoke and gas exposure
+dat[, .(avg_fev = mean(fev), std_fev = sd(fev), avg_asthma = mean(asthma),
+    asthma_std = sd(asthma)), by = smoke_gas_exposure]
+```
+
+    ##    smoke_gas_exposure  avg_fev  std_fev avg_asthma asthma_std
+    ## 1:            neither 2055.356 330.4169  0.1476213  0.3522319
+    ## 2:               both 2020.516 306.5113  0.1443831  0.3373595
+    ## 3:                gas 2023.639 318.7928  0.1460135  0.3511608
+    ## 4:              smoke 2062.816 290.1996  0.1538265  0.3563238
 
 ### Looking at the Data (EDA)
 
-The primary questions of interest are: 1. What is the association
-between BMI and FEV (forced expiratory volume)? 2. What is the
-association between smoke and gas exposure and FEV? 3. What is the
-association between PM2.5 exposure and FEV?  
+The primary questions of interest are:  
+1. What is the association between BMI and FEV (forced expiratory
+volume)?  
+2. What is the association between smoke and gas exposure and FEV?  
+3. What is the association between PM2.5 exposure and FEV?  
 
 Follow the EDA checklist from week 3 and the previous assignment. Be
 sure to focus on the key variables. Visualization Create the following

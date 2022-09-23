@@ -56,6 +56,8 @@ regional <- fread("regional.csv")
 
 ```
 
+######  1. After merging the data, make sure you don’t have any duplicates by counting the number of rows. Make sure it matches.
+  
 Merge data tables and ensure dimensions are correct.
 ```{r merging data}
 #Check rows
@@ -72,32 +74,33 @@ Impute missing values with averages within variables "male" and "hispanic"
 ```{r view missing data}
 #get columns that have na count greater than 0, and pass them into a vector
 cols <- names(which(colSums(is.na(dat)) > 0))
-
-
-#subset data table for hispanic males and compute averages on the columns of interest
-dat[male == 1 & hispanic == 1, lapply(.SD, mean, na.rm = TRUE), .SDcols = cols]
+cols
 ```
-```{r}
-dat2 <- copy(dat)
 
-dat2[, m_bmi := mean(bmi, na.rm = TRUE), by = .(male, hispanic)]
+```{r impute nas with means of each group}
 
-in_names  <- cols
+#select most important columns to impute NAs and assign to "in_names"
+in_names  <- c("agepft", "height", "weight", "bmi", "smoke", "asthma", "gasstove", "fev")
 out_names <- paste0(in_names, "_avg")
-(dat3 <- merge(
+dat <- merge(
   
+  #group by variables hispanic and male, then compute the mean of in_names for each group and assign to temporary variable x
   x = dat[,
   setNames(lapply(.SD, mean, na.rm = TRUE), out_names),
   .SDcols = in_names, 
   by  = .(hispanic, male)
   ],
   
-  y = dat2,
+  #merge temporary variable x back with main data table to add new columns containing averages
+  y = dat,
   by.x = c("hispanic", "male"),
   by.y = c("hispanic", "male")
-))
+)
 
-dat3[,
+head(dat, n = 3)
+
+#impute NAs with averages from _avg columns
+dat[,
      c("agepft", "height", "weight", "bmi", "smoke", "asthma", "gasstove", "fev") :=
      .(
        fifelse(is.na(agepft), agepft_avg, agepft),
@@ -111,15 +114,62 @@ dat3[,
      )
      ]
 
+#check that there are no more NAs in the important columns
+sum(is.na(dat[, ..in_names]))
 
-dat3[, ..cols]
-#dat2[rowSums(is.na(dat2)) > 0, ]
+```
+
+###### 2. Create a new categorical variable named “obesity_level” using the BMI measurement (underweight BMI<14; normal BMI 14-22; overweight BMI 22-24; obese BMI>24). To make sure the variable is rightly coded, create a summary table that contains the minimum BMI, maximum BMI, and the total number of observations per category.
+
+
+```{r create obesity_level category}
+#removing the averages columns created for previous step
+dat <- dat %>% select(!ends_with("_avg")) %>% collect()
+dat <- as.data.table(dat)
+
+dat[, 
+    obesity_level := fifelse(bmi < 14, "underweight", 
+                             fifelse(bmi >= 14 & bmi < 22, "normal", 
+                                     fifelse(bmi >= 22 & bmi <= 24, "overweight", "obese")))]
+```
+Create summary table to verify new column.
+```{r summary table of new column}
+dat[, .(min_bmi = min(bmi), max_bmi = max(bmi)), by = obesity_level][order(min_bmi)]
 ```
 
 
 
+###### 3. Create another categorical variable named “smoke_gas_exposure” that summarizes “Second Hand Smoke” and “Gas Stove.” The variable should have four categories in total.
+```{r create smoke_and_gas category}
+dat[,
+    smoke_gas_exposure := fifelse(smoke > 0 & gasstove > 0, "both",
+                                  fifelse(smoke == 0 & gasstove > 0, "gas",
+                                          fifelse(smoke > 0 & gasstove == 0, "smoke","neither")))]
+```
+
+###### 4. Create four summary tables showing the average (or proportion, if binary) and sd of “Forced expiratory volume in 1 second (ml)” and asthma indicator by town, sex, obesity level, and “smoke_gas_exposure.”
+
+```{r four summary tables}
+
+#fev and asthma by town name
+dat[, .(avg_fev = mean(fev), std_fev = sd(fev), avg_asthma = mean(asthma), asthma_std = sd(asthma)), by = townname]
+
+#fev and asthma by sex
+dat[, .(avg_fev = mean(fev), std_fev = sd(fev), avg_asthma = mean(asthma), asthma_std = sd(asthma)), by = male]
+
+#fev and asthma by obesity level
+dat[, .(avg_fev = mean(fev), std_fev = sd(fev), avg_asthma = mean(asthma), asthma_std = sd(asthma)), by = obesity_level]
+
+#fev and asthma by smoke and gas exposure
+dat[, .(avg_fev = mean(fev), std_fev = sd(fev), avg_asthma = mean(asthma), asthma_std = sd(asthma)), by = smoke_gas_exposure]
+```
+
+
 ### Looking at the Data (EDA)
-The primary questions of interest are: 1. What is the association between BMI and FEV (forced expiratory volume)? 2. What is the association between smoke and gas exposure and FEV? 3. What is the association between PM2.5 exposure and FEV? \
+The primary questions of interest are: \
+1. What is the association between BMI and FEV (forced expiratory volume)? \
+2. What is the association between smoke and gas exposure and FEV? \
+3. What is the association between PM2.5 exposure and FEV? \
 
 Follow the EDA checklist from week 3 and the previous assignment. Be sure to focus on the key variables. Visualization Create the following figures and interpret them. Be sure to include easily understandable axes, titles, and legends. \
 
