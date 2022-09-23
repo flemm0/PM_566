@@ -21,9 +21,100 @@ You will need to download two datasets from https://github.com/USCbiostats/data-
 
   4. Create four summary tables showing the average (or proportion, if binary) and sd of “Forced expiratory volume in 1 second (ml)” and asthma indicator by town, sex, obesity level, and “smoke_gas_exposure.” \
 
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(tidy.opts = list(width.cutoff = 60), tidy = TRUE)
+setwd("~/Desktop/PM566/GitHub/02-assignment")
+```
+
+Load libraries
+```{r load libraries}
+library(data.table)
+library(tidyverse)
+library(dtplyr)
+```
+
+Download data
+```{r download data}
+if(!file.exists("individual.csv")){
+  download.file(url = "https://raw.githubusercontent.com/USCbiostats/data-science-data/master/01_chs/chs_individual.csv",
+               destfile = "individual.csv",
+               method = "libcurl",
+               timeout = 60)
+}
+
+if(!file.exists("regional.csv")){
+  download.file(url = "https://raw.githubusercontent.com/USCbiostats/data-science-data/master/01_chs/chs_regional.csv",
+               destfile = "regional.csv",
+               method = "libcurl",
+               timeout = 60)
+}
+
+#Read data tables
+individual <- fread("individual.csv")
+regional <- fread("regional.csv")
+
+```
+
+Merge data tables and ensure dimensions are correct.
+```{r merging data}
+#Check rows
+dim(individual) #merged data table should contain 1200 rows
+dim(regional) #merged data table should have 23 + 26 columns
+
+dat <- merge(x = individual, y = regional, by.x = "townname", by.y = "townname")
+
+#Check dimensions
+dim(dat) #1200 rows and 49 columns as expected
+```
+
+Impute missing values with averages within variables "male" and "hispanic"
+```{r view missing data}
+#get columns that have na count greater than 0, and pass them into a vector
+cols <- names(which(colSums(is.na(dat)) > 0))
 
 
+#subset data table for hispanic males and compute averages on the columns of interest
+dat[male == 1 & hispanic == 1, lapply(.SD, mean, na.rm = TRUE), .SDcols = cols]
+```
+```{r}
+dat2 <- copy(dat)
 
+dat2[, m_bmi := mean(bmi, na.rm = TRUE), by = .(male, hispanic)]
+
+in_names  <- cols
+out_names <- paste0(in_names, "_avg")
+(dat3 <- merge(
+  
+  x = dat[,
+  setNames(lapply(.SD, mean, na.rm = TRUE), out_names),
+  .SDcols = in_names, 
+  by  = .(hispanic, male)
+  ],
+  
+  y = dat2,
+  by.x = c("hispanic", "male"),
+  by.y = c("hispanic", "male")
+))
+
+dat3[,
+     c("agepft", "height", "weight", "bmi", "smoke", "asthma", "gasstove", "fev") :=
+     .(
+       fifelse(is.na(agepft), agepft_avg, agepft),
+       fifelse(is.na(height), height_avg, height),
+       fifelse(is.na(weight), weight_avg, weight),
+       fifelse(is.na(bmi), bmi_avg, bmi),
+       fifelse(is.na(smoke), smoke_avg, smoke),
+       fifelse(is.na(asthma), asthma_avg, asthma),
+       fifelse(is.na(gasstove), gasstove_avg, gasstove),
+       fifelse(is.na(fev), fev_avg, fev)
+     )
+     ]
+
+
+dat3[, ..cols]
+#dat2[rowSums(is.na(dat2)) > 0, ]
+```
 
 
 
