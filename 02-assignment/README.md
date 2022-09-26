@@ -82,15 +82,17 @@ Impute missing values with averages within variables “male” and
 ``` r
 # get columns that have na count greater than 0, and pass
 # them into a vector
-cols <- names(which(colSums(is.na(dat)) > 0))
-cols
+which(colSums(is.na(dat)) > 0)
 ```
 
-    ##  [1] "agepft"        "height"        "weight"        "bmi"          
-    ##  [5] "asthma"        "father_asthma" "mother_asthma" "wheeze"       
-    ##  [9] "hayfever"      "allergy"       "educ_parent"   "smoke"        
-    ## [13] "gasstove"      "fev"           "fvc"           "mmef"         
-    ## [17] "no_24hr"       "pm2_5_fr"
+    ##        agepft        height        weight           bmi        asthma 
+    ##             6             7             8             9            10 
+    ## father_asthma mother_asthma        wheeze      hayfever       allergy 
+    ##            12            13            14            15            16 
+    ##   educ_parent         smoke      gasstove           fev           fvc 
+    ##            17            18            20            21            22 
+    ##          mmef       no_24hr      pm2_5_fr 
+    ##            23            43            44
 
 ``` r
 #select most important columns to impute NAs and assign to "in_names"
@@ -194,9 +196,35 @@ dat[, .(min_bmi = min(bmi), max_bmi = max(bmi)), by = obesity_level][order(min_b
 ###### 3. Create another categorical variable named “smoke_gas_exposure” that summarizes “Second Hand Smoke” and “Gas Stove.” The variable should have four categories in total.
 
 ``` r
-dat[, `:=`(smoke_gas_exposure, fifelse(smoke > 0 & gasstove >
-    0, "both", fifelse(smoke == 0 & gasstove > 0, "gas", fifelse(smoke >
-    0 & gasstove == 0, "smoke", "neither"))))]
+dat[(smoke %between% c(0.001, 0.999)) & (gasstove %between% c(0.001,
+    0.999)), .(smoke, gasstove)]
+```
+
+    ##         smoke  gasstove
+    ##  1: 0.1522989 0.7291066
+    ##  2: 0.1522989 0.7291066
+    ##  3: 0.1522989 0.7291066
+    ##  4: 0.1949686 0.7798742
+    ##  5: 0.1949686 0.7798742
+    ##  6: 0.1535270 0.8218623
+    ##  7: 0.1535270 0.8218623
+    ##  8: 0.1535270 0.8218623
+    ##  9: 0.1501976 0.8156863
+    ## 10: 0.1501976 0.8156863
+    ## 11: 0.1501976 0.8156863
+    ## 12: 0.1501976 0.8156863
+    ## 13: 0.1501976 0.8156863
+
+It appears that the imputed average for smoke exposure is closer to 0,
+and the imputed average for gas exposure is closer to 1. When creating
+the smoke and gas exposure category, those that have smoke exposure = 1
+will qualify. As for the gas exposure, those that have gasstove != 0
+will qualify.
+
+``` r
+dat[, `:=`(smoke_gas_exposure, fifelse(smoke == 1 & gasstove !=
+    0, "both", fifelse(smoke != 1 & gasstove != 0, "gas", fifelse(smoke ==
+    1 & gasstove == 0, "smoke", "neither"))))]
 ```
 
 ###### 4. Create four summary tables showing the average (or proportion, if binary) and sd of “Forced expiratory volume in 1 second (ml)” and asthma indicator by town, sex, obesity level, and “smoke_gas_exposure.”
@@ -250,10 +278,10 @@ dat[, .(avg_fev = mean(fev), std_fev = sd(fev), avg_asthma = mean(asthma),
 ```
 
     ##    smoke_gas_exposure  avg_fev  std_fev avg_asthma asthma_std
-    ## 1:            neither 2055.356 330.4169  0.1476213  0.3522319
-    ## 2:               both 2020.516 306.5113  0.1443831  0.3373595
-    ## 3:                gas 2023.639 318.7928  0.1460135  0.3511608
-    ## 4:              smoke 2062.816 290.1996  0.1538265  0.3563238
+    ## 1:            neither 2056.693 328.7843  0.1448168  0.3487352
+    ## 2:                gas 2022.671 319.3449  0.1491750  0.3519572
+    ## 3:              smoke 2055.714 295.6475  0.1717490  0.3768879
+    ## 4:               both 2024.778 300.6313  0.1277738  0.3291856
 
 ### Looking at the Data (EDA)
 

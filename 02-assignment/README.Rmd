@@ -65,8 +65,7 @@ dim(dat) #1200 rows and 49 columns as expected
 Impute missing values with averages within variables "male" and "hispanic"
 ```{r view missing data}
 #get columns that have na count greater than 0, and pass them into a vector
-cols <- names(which(colSums(is.na(dat)) > 0))
-cols
+which(colSums(is.na(dat)) > 0)
 ```
 
 ```{r impute nas with means of each group}
@@ -133,11 +132,16 @@ dat[, .(min_bmi = min(bmi), max_bmi = max(bmi)), by = obesity_level][order(min_b
 
 
 ###### 3. Create another categorical variable named “smoke_gas_exposure” that summarizes “Second Hand Smoke” and “Gas Stove.” The variable should have four categories in total.
+```{r consider imputed values}
+dat[(smoke %between% c(0.001,0.999)) & (gasstove %between% c(0.001,0.999)), .(smoke, gasstove)]
+```
+It appears that the imputed average for smoke exposure is closer to 0, and the imputed average for gas exposure is closer to 1. When creating the smoke and gas exposure category, those that have smoke exposure = 1 will qualify. As for the gas exposure, those that have gasstove != 0 will qualify.
+
 ```{r create smoke/gas category}
 dat[,
-    smoke_gas_exposure := fifelse(smoke > 0 & gasstove > 0, "both",
-                                  fifelse(smoke == 0 & gasstove > 0, "gas",
-                                          fifelse(smoke > 0 & gasstove == 0, "smoke","neither")))]
+    smoke_gas_exposure := fifelse(smoke == 1 & gasstove != 0, "both",
+                                  fifelse(smoke != 1 & gasstove != 0, "gas",
+                                          fifelse(smoke == 1 & gasstove == 0, "smoke","neither")))]
 ```
 
 
