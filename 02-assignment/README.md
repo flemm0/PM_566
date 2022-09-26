@@ -1,7 +1,7 @@
 Assignment 02: Data Viz and Wrangling
 ================
 Flemming Wu
-2022-09-22
+2022-09-25
 
 For this assignment, we will be analyzing data from USC’s Children’s
 Health Study. The learning objectives are to conduct data wrangling and
@@ -15,30 +15,7 @@ regional CHS datasets in 01_chs. The individual data includes personal
 and health characteristics of children in 12 communities across Southern
 California. The regional data include air quality measurements at the
 community level. Once downloaded, you can merge these datasets using the
-location variable. Once combined, you will need to do the following:  
-
-1.  After merging the data, make sure you don’t have any duplicates by
-    counting the number of rows. Make sure it matches.  
-
-In the case of missing values, impute data using the average within the
-variables “male” and “hispanic.” If you are interested (and feel
-adventurous) in the theme of Data Imputation, take a look at this paper
-on “Multiple Imputation” using the Amelia R package here.  
-
-2.  Create a new categorical variable named “obesity_level” using the
-    BMI measurement (underweight BMI\<14; normal BMI 14-22; overweight
-    BMI 22-24; obese BMI\>24). To make sure the variable is rightly
-    coded, create a summary table that contains the minimum BMI, maximum
-    BMI, and the total number of observations per category.  
-
-3.  Create another categorical variable named “smoke_gas_exposure” that
-    summarizes “Second Hand Smoke” and “Gas Stove.” The variable should
-    have four categories in total.  
-
-4.  Create four summary tables showing the average (or proportion, if
-    binary) and sd of “Forced expiratory volume in 1 second (ml)” and
-    asthma indicator by town, sex, obesity level, and
-    “smoke_gas_exposure.”  
+location variable. Once combined, you will need to do the following:
 
 Load libraries
 
@@ -82,7 +59,12 @@ individual <- fread("individual.csv")
 regional <- fread("regional.csv")
 ```
 
-###### 1. After merging the data, make sure you don’t have any duplicates by counting the number of rows. Make sure it matches.
+###### 1. After merging the data, make sure you don’t have any duplicates by counting the number of rows. Make sure it matches. 
+
+In the case of missing values, impute data using the average within the
+variables “male” and “hispanic.” If you are interested (and feel
+adventurous) in the theme of Data Imputation, take a look at this paper
+on “Multiple Imputation” using the Amelia R package here.  
 
 Merge data tables and ensure dimensions are correct.
 
@@ -301,14 +283,58 @@ sure to focus on the key variables. Visualization Create the following
 figures and interpret them. Be sure to include easily understandable
 axes, titles, and legends.  
 
-1.  Facet plot showing scatterplots with regression lines of BMI vs FEV
-    by “townname”.  
-2.  Stacked histograms of FEV by BMI category and FEV by smoke/gas
-    exposure. Use different color schemes 3. than the ggplot default.  
-3.  Barchart of BMI by smoke/gas exposure.  
-4.  Statistical summary graphs of FEV by BMI and FEV by smoke/gas
-    exposure category.  
-5.  A leaflet map showing the concentrations of PM2.5 mass in each of
-    the CHS communities.  
-6.  Choose a visualization to examine whether PM2.5 mass is associated
-    with FEV.  
+###### 1. Facet plot showing scatterplots with regression lines of BMI vs FEV by “townname”. 
+
+``` r
+ggplot(dat, aes(bmi, fev)) + geom_jitter(size = 0.5) + geom_smooth(method = "lm",
+    formula = y ~ x, size = 0.5) + facet_wrap(~townname, nrow = 3)
+```
+
+![](README_files/figure-gfm/facet%20plot%20of%20bmi%20vs%20fev-1.png)<!-- -->  
+The plots above show that forced expiratory volume and body mass index
+are positively correlated in each of the towns in the data set.
+
+###### 2. Stacked histograms of FEV by BMI category and FEV by smoke/gas exposure. Use different color schemes than the ggplot default.
+
+``` r
+require(gridExtra)
+```
+
+    ## Loading required package: gridExtra
+
+    ## 
+    ## Attaching package: 'gridExtra'
+
+    ## The following object is masked from 'package:dplyr':
+    ## 
+    ##     combine
+
+``` r
+p1 <- ggplot(data = dat, mapping = aes(x = fev)) + geom_histogram(mapping = aes(fill = factor(obesity_level)),
+    bins = 70) + scale_fill_manual(values = c("darkseagreen2",
+    "lemonchiffon2", "lightsalmon1", "gold1"))
+
+p2 <- ggplot(data = dat, mapping = aes(x = fev)) + geom_histogram(mapping = aes(fill = factor(smoke_gas_exposure)),
+    bins = 70) + scale_fill_manual(values = c("dodgerblue4",
+    "lightpink", "cadetblue1", "darkorange1"))
+
+grid.arrange(p1, p2, ncol = 1)
+```
+
+![](README_files/figure-gfm/histograms%20of%20fev%20by%20bmi%20and%20smoke/gas-1.png)<!-- -->
+
+###### 3. Barchart of BMI by smoke/gas exposure. 
+
+``` r
+ggplot(data = dat, mapping = aes(x = obesity_level, fill = factor(smoke_gas_exposure))) +
+    geom_bar() + scale_fill_manual(values = c("dodgerblue4",
+    "lightpink", "cadetblue1", "darkorange1"))
+```
+
+![](README_files/figure-gfm/bmi%20vs%20smoke/gas%20barchart-1.png)<!-- -->
+
+###### 4. Statistical summary graphs of FEV by BMI and FEV by smoke/gas exposure category. 
+
+###### 5. A leaflet map showing the concentrations of PM2.5 mass in each of the CHS communities. 
+
+###### 6. Choose a visualization to examine whether PM2.5 mass is associated with FEV. 
