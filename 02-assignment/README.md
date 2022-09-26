@@ -1,7 +1,7 @@
 Assignment 02: Data Viz and Wrangling
 ================
 Flemming Wu
-2022-09-25
+2022-09-26
 
 For this assignment, we will be analyzing data from USC’s Children’s
 Health Study. The learning objectives are to conduct data wrangling and
@@ -22,23 +22,8 @@ Load libraries
 ``` r
 library(data.table)
 library(tidyverse)
-```
-
-    ## ── Attaching packages ─────────────────────────────────────── tidyverse 1.3.2 ──
-    ## ✔ ggplot2 3.3.6      ✔ purrr   0.3.4 
-    ## ✔ tibble  3.1.8      ✔ dplyr   1.0.10
-    ## ✔ tidyr   1.2.1      ✔ stringr 1.4.1 
-    ## ✔ readr   2.1.2      ✔ forcats 0.5.2 
-    ## ── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
-    ## ✖ dplyr::between()   masks data.table::between()
-    ## ✖ dplyr::filter()    masks stats::filter()
-    ## ✖ dplyr::first()     masks data.table::first()
-    ## ✖ dplyr::lag()       masks stats::lag()
-    ## ✖ dplyr::last()      masks data.table::last()
-    ## ✖ purrr::transpose() masks data.table::transpose()
-
-``` r
 library(dtplyr)
+library(leaflet)
 ```
 
 Download data
@@ -286,13 +271,18 @@ axes, titles, and legends.
 ###### 1. Facet plot showing scatterplots with regression lines of BMI vs FEV by “townname”. 
 
 ``` r
-ggplot(dat, aes(bmi, fev)) + geom_jitter(size = 0.5) + geom_smooth(method = "lm",
-    formula = y ~ x, size = 0.5) + facet_wrap(~townname, nrow = 3)
+ggplot(dat, aes(bmi, fev, color = townname)) + geom_jitter(size = 0.5) +
+    geom_smooth(method = "lm", formula = y ~ x, size = 0.5, se = FALSE,
+        color = "red") + facet_wrap(~townname, nrow = 3)
 ```
 
 ![](README_files/figure-gfm/facet%20plot%20of%20bmi%20vs%20fev-1.png)<!-- -->  
 The plots above show that forced expiratory volume and body mass index
 are positively correlated in each of the towns in the data set.
+Additionally, towns such as Alpine and Riverside have a relatively low
+positive slope, whereas towns such as San Dimas, Lake Elsinore, and
+Upland much steeper positive slopes. This suggests that the positive
+correlation between bmi and fev varies by region.
 
 ###### 2. Stacked histograms of FEV by BMI category and FEV by smoke/gas exposure. Use different color schemes than the ggplot default.
 
@@ -321,20 +311,81 @@ p2 <- ggplot(data = dat, mapping = aes(x = fev)) + geom_histogram(mapping = aes(
 grid.arrange(p1, p2, ncol = 1)
 ```
 
-![](README_files/figure-gfm/histograms%20of%20fev%20by%20bmi%20and%20smoke/gas-1.png)<!-- -->
+![](README_files/figure-gfm/histograms%20of%20fev%20by%20bmi%20and%20smoke/gas-1.png)<!-- -->  
+Of the two histograms above, the one on top reveals that most people in
+the data set fall under the normal obesity level category, and that the
+average forced expiratory volume (fev) for people in this category lies
+at about 2000 with a normal distribution. As for people in the
+underweight category, the average fev is lower than that of those in the
+normal category, at about 1750. For people in both the overweight and
+obese categories, the average fev lies about at 2300, which is higher
+than the average for the people in the normal category.  
+The histogram on the bottom reveals that most people in the data set are
+classified as either having exposure to both gas and smoke, or gas only.
+Additionally, most of the people in each category have an average fev of
+about 2000, with a standard deviation of about 300.
 
 ###### 3. Barchart of BMI by smoke/gas exposure. 
 
 ``` r
 ggplot(data = dat, mapping = aes(x = obesity_level, fill = factor(smoke_gas_exposure))) +
-    geom_bar() + scale_fill_manual(values = c("dodgerblue4",
+    geom_bar(position = "dodge") + scale_fill_manual(values = c("dodgerblue4",
     "lightpink", "cadetblue1", "darkorange1"))
 ```
 
-![](README_files/figure-gfm/bmi%20vs%20smoke/gas%20barchart-1.png)<!-- -->
+![](README_files/figure-gfm/bmi%20vs%20smoke/gas%20barchart-1.png)<!-- -->  
+From this bar chart of bmi category counts by obesity level, it is
+evident that the proportions of people that are exposed to gas, smoke,
+both, or neither are mostly consistent across the bmi categories. The
+highest proportion of people in each category have some exposure to gas,
+and the smallest proportion of people have some exposure to smoke. For
+the other types of exposure (both or neither), the proportion of people
+in those categories sits at about one third of that of the proportion of
+people exposed to gas only.
 
 ###### 4. Statistical summary graphs of FEV by BMI and FEV by smoke/gas exposure category. 
 
+``` r
+ggplot(data = dat, mapping = aes(x = fev, y = bmi, col = obesity_level)) +
+    geom_jitter() + geom_smooth(formula = y ~ x, method = "lm",
+    se = FALSE)
+```
+
+![](README_files/figure-gfm/plot%20stat%20summary%20of%20fev%20by%20bmi-1.png)<!-- -->
+
+``` r
+ggplot(data = dat, mapping = aes(y = fev, x = smoke_gas_exposure,
+    color = smoke_gas_exposure)) + geom_violin(trim = FALSE,
+    fill = NA) + stat_summary(fun.min = min, fun.max = max, fun = median)
+```
+
+![](README_files/figure-gfm/plot%20stat%20summary%20of%20fev%20by%20smoke/gas%20exposure-1.png)<!-- -->
+
 ###### 5. A leaflet map showing the concentrations of PM2.5 mass in each of the CHS communities. 
 
+``` r
+qpal <- colorQuantile("YlOrRd", dat[, pm25_mass], n = 12)
+
+qpal_colors <- unique(qpal(sort(dat[, pm25_mass])))
+qpal_labs <- unique(sort(dat[, pm25_mass]))
+
+leaflet(dat) %>%
+    addProviderTiles(providers$CartoDB.Positron) %>%
+    addCircles(lat = ~lat, lng = ~lon, color = ~qpal(pm25_mass),
+        radius = 200, fillOpacity = 1) %>%
+    addLegend(colors = qpal_colors, labels = qpal_labs, title = "conc. of PM 2.5 mass")
+```
+
+![](README_files/figure-gfm/plot%20leaflet%20map-1.png)<!-- -->
+
 ###### 6. Choose a visualization to examine whether PM2.5 mass is associated with FEV. 
+
+``` r
+library(ggbeeswarm)
+
+ggplot(data = dat, mapping = aes(x = pm25_mass, y = fev, col = pm25_mass)) +
+    geom_beeswarm() + geom_smooth(formula = y ~ x, method = "lm",
+    col = "black")
+```
+
+![](README_files/figure-gfm/pm25%20mass%20and%20fev%20association%20visualization-1.png)<!-- -->
