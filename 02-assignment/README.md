@@ -376,10 +376,19 @@ people exposed to gas only.
 ``` r
 ggplot(data = dat, mapping = aes(x = fev, y = bmi, col = obesity_level)) +
     geom_jitter() + geom_smooth(formula = y ~ x, method = "lm",
-    se = FALSE)
+    se = FALSE, size = 0.75) + geom_smooth(mapping = aes(x = fev,
+    y = bmi), col = "black", method = "lm", formula = y ~ x,
+    se = FALSE, size = 0.75, linetype = "twodash")
 ```
 
-![](README_files/figure-gfm/plot%20stat%20summary%20of%20fev%20by%20bmi-1.png)<!-- -->
+![](README_files/figure-gfm/plot%20stat%20summary%20of%20fev%20by%20bmi-1.png)<!-- -->  
+The above plot reveals that there is a positive correlation between
+increase in bmi and increase in forced expiratory volume, as shown in
+the dashed black regression line drawn through the points. Furthermore,
+within each of the obesity level categories, there seems to be the
+steepest positive correlation slope for the relationship between bmi and
+fev for those in the normal obesity level category, followed by obese,
+then underweight, and finally overweight.
 
 ``` r
 ggplot(data = dat, mapping = aes(y = fev, x = smoke_gas_exposure,
@@ -387,7 +396,13 @@ ggplot(data = dat, mapping = aes(y = fev, x = smoke_gas_exposure,
     fun.max = max, fun = median)
 ```
 
-![](README_files/figure-gfm/plot%20stat%20summary%20of%20fev%20by%20smoke/gas%20exposure-1.png)<!-- -->
+![](README_files/figure-gfm/plot%20stat%20summary%20of%20fev%20by%20smoke/gas%20exposure-1.png)<!-- -->  
+The stat summary above reveals that when looking at fev by smoke and gas
+exposure, there the median fev for the groups all lie at 2000. The
+groups having no exposure to smoke or gas, as well as the group exposed
+to smoke only have medians slightly higher than the other two groups.
+Additionally, the range of observations for the groups exposed to
+neither and gas are greater than for the other two groups.
 
 ###### 5. A leaflet map showing the concentrations of PM2.5 mass in each of the CHS communities. 
 
@@ -404,16 +419,24 @@ leaflet(dat) %>%
     addLegend(colors = qpal_colors, labels = qpal_labs, title = "conc. of PM 2.5 mass")
 ```
 
-![](README_files/figure-gfm/plot%20leaflet%20map-1.png)<!-- -->
+![](README_files/figure-gfm/plot%20leaflet%20map-1.png)<!-- -->  
+The leaflet plot above reveals that higher concentration levels of pm
+2.5 are associated with large, urban population centers, in this case
+around the greater Los Angeles area. Only in areas such as Santa Barbara
+or San Luis Obispo that are further from large population centers and
+closer to the coastline are low concentration levels of pm 2.5 (below 8)
+are observed.
 
 ###### 6. Choose a visualization to examine whether PM2.5 mass is associated with FEV. 
 
 ``` r
-library(ggbeeswarm)
-
-ggplot(data = dat, mapping = aes(x = pm25_mass, y = fev, col = pm25_mass)) +
-    geom_beeswarm() + geom_smooth(formula = y ~ x, method = "lm",
-    col = "black")
+ggplot(data = dat, mapping = aes(y = fev, x = pm25_mass, group = factor(pm25_mass))) +
+    geom_boxplot(width = 0.5) + geom_smooth(mapping = aes(group = 1),
+    col = "red", formula = y ~ x, method = "lm", alpha = 0.01,
+    linetype = "twodash")
 ```
 
-![](README_files/figure-gfm/pm25%20mass%20and%20fev%20association%20visualization-1.png)<!-- -->
+![](README_files/figure-gfm/pm25%20mass%20and%20fev%20association%20grouped%20boxplots-1.png)<!-- -->  
+The above boxplots show that there is a small negative correlation
+between forced expiratory volume and concentration of pm 2.5 mass, with
+a slight decrease in fev with increasing concentration of pm 2.5 mass.
