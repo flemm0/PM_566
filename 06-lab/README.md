@@ -149,24 +149,18 @@ Explain what we see from this result. Does it makes sense? What insights
 
 ``` r
 mtsamples %>%
-  unnest_tokens(token, transcription)
+  unnest_tokens(token, transcription) %>%
+  count(token) %>%
+  top_n(20, n) %>%
+  ggplot(aes(x = n, y = fct_reorder(token, n))) +
+  geom_col()
 ```
 
-    ## # A tibble: 2,403,563 × 6
-    ##        X description                               medic…¹ sampl…² keywo…³ token
-    ##    <int> <chr>                                     <chr>   <chr>   <chr>   <chr>
-    ##  1     0 " A 23-year-old white female presents wi… " Alle… " Alle… allerg… subj…
-    ##  2     0 " A 23-year-old white female presents wi… " Alle… " Alle… allerg… this 
-    ##  3     0 " A 23-year-old white female presents wi… " Alle… " Alle… allerg… 23   
-    ##  4     0 " A 23-year-old white female presents wi… " Alle… " Alle… allerg… year 
-    ##  5     0 " A 23-year-old white female presents wi… " Alle… " Alle… allerg… old  
-    ##  6     0 " A 23-year-old white female presents wi… " Alle… " Alle… allerg… white
-    ##  7     0 " A 23-year-old white female presents wi… " Alle… " Alle… allerg… fema…
-    ##  8     0 " A 23-year-old white female presents wi… " Alle… " Alle… allerg… pres…
-    ##  9     0 " A 23-year-old white female presents wi… " Alle… " Alle… allerg… with 
-    ## 10     0 " A 23-year-old white female presents wi… " Alle… " Alle… allerg… comp…
-    ## # … with 2,403,553 more rows, and abbreviated variable names
-    ## #   ¹​medical_specialty, ²​sample_name, ³​keywords
+![](README_files/figure-gfm/unnamed-chunk-1-1.png)<!-- -->  
+The results do make sense, with common stop words such as “the”, “and”,
+“was”, “of”, etc. showing up in the majority of the top 20 tokens in the
+transcription column. Additionally, the high frequency of the word
+“patient” is expected.
 
 ------------------------------------------------------------------------
 

@@ -90,11 +90,16 @@ The distribution is not uniform among all of the categories. Even within the top
 
 Explain what we see from this result. Does it makes sense? What insights (if any) do we get?
 
-```{r}
+```{r tokenize transcription column and visualize top 20}
 mtsamples %>%
-  unnest_tokens(token, transcription)
+  unnest_tokens(token, transcription) %>%
+  count(token) %>%
+  top_n(20, n) %>%
+  ggplot(aes(x = n, y = fct_reorder(token, n))) +
+  geom_col()
 ```
-
+\
+The results do make sense, with common stop words such as "the", "and", "was", "of", etc. showing up in the majority of the top 20 tokens in the transcription column. Additionally, the high frequency of the word "patient" is expected.
 
 ---
 
@@ -105,11 +110,33 @@ mtsamples %>%
 
 What do we see know that we have removed stop words? Does it give us a better idea of what the text is about?
 
+```{r tokenize and remove stop words}
+mtsamples %>%
+  unnest_tokens(token, transcription) %>%
+  count(token, sort = TRUE) %>%
+  anti_join(stop_words, by = c("token" = "word")) %>%
+  filter( !grepl(pattern = "^[0-9]+$", x = token)) %>% #regex step to remove numbers
+  top_n(20, n) %>%
+  ggplot(aes(x = n, y = fct_reorder(token, n))) +
+  geom_col()
+```
+\
+With the stop words removed, we are now left with words that are associated with medical terminology such as "procedure", "pain", "blood", "anesthesia", "disease", etc. It is now clear to anyone looking at the column chart that the text being visualized is medical-related.
+
 ---
 
 # Question 4
 
 repeat question 2, but this time tokenize into bi-grams. how does the result change if you look at tri-grams?
+
+```{r}
+mtsamples %>%
+  unnest_ngrams(ngram, transcription, n = 2)
+
+mtsamples %>%
+  unnest_ngrams(ngram, transcription, n = 3)
+```
+
 
 ---
 
