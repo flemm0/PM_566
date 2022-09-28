@@ -156,7 +156,7 @@ mtsamples %>%
   geom_col()
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-1-1.png)<!-- -->  
+![](README_files/figure-gfm/tokenize%20transcription%20column%20and%20visualize%20top%2020-1.png)<!-- -->  
 The results do make sense, with common stop words such as “the”, “and”,
 “was”, “of”, etc. showing up in the majority of the top 20 tokens in the
 transcription column. Additionally, the high frequency of the word
@@ -172,12 +172,71 @@ transcription column. Additionally, the high frequency of the word
 What do we see know that we have removed stop words? Does it give us a
 better idea of what the text is about?
 
+``` r
+mtsamples %>%
+  unnest_tokens(token, transcription) %>%
+  count(token, sort = TRUE) %>%
+  anti_join(stop_words, by = c("token" = "word")) %>%
+  filter( !grepl(pattern = "^[0-9]+$", x = token)) %>% #regex step to remove numbers
+  top_n(20, n) %>%
+  ggplot(aes(x = n, y = fct_reorder(token, n))) +
+  geom_col()
+```
+
+![](README_files/figure-gfm/tokenize%20and%20remove%20stop%20words-1.png)<!-- -->  
+With the stop words removed, we are now left with words that are
+associated with medical terminology such as “procedure”, “pain”,
+“blood”, “anesthesia”, “disease”, etc. It is now clear to anyone looking
+at the column chart that the text being visualized is medical-related.
+
 ------------------------------------------------------------------------
 
 # Question 4
 
 repeat question 2, but this time tokenize into bi-grams. how does the
 result change if you look at tri-grams?
+
+``` r
+mtsamples %>%
+  unnest_ngrams(ngram, transcription, n = 2)
+```
+
+    ## # A tibble: 2,398,638 × 6
+    ##        X description                               medic…¹ sampl…² keywo…³ ngram
+    ##    <int> <chr>                                     <chr>   <chr>   <chr>   <chr>
+    ##  1     0 " A 23-year-old white female presents wi… " Alle… " Alle… allerg… subj…
+    ##  2     0 " A 23-year-old white female presents wi… " Alle… " Alle… allerg… this…
+    ##  3     0 " A 23-year-old white female presents wi… " Alle… " Alle… allerg… 23 y…
+    ##  4     0 " A 23-year-old white female presents wi… " Alle… " Alle… allerg… year…
+    ##  5     0 " A 23-year-old white female presents wi… " Alle… " Alle… allerg… old …
+    ##  6     0 " A 23-year-old white female presents wi… " Alle… " Alle… allerg… whit…
+    ##  7     0 " A 23-year-old white female presents wi… " Alle… " Alle… allerg… fema…
+    ##  8     0 " A 23-year-old white female presents wi… " Alle… " Alle… allerg… pres…
+    ##  9     0 " A 23-year-old white female presents wi… " Alle… " Alle… allerg… with…
+    ## 10     0 " A 23-year-old white female presents wi… " Alle… " Alle… allerg… comp…
+    ## # … with 2,398,628 more rows, and abbreviated variable names
+    ## #   ¹​medical_specialty, ²​sample_name, ³​keywords
+
+``` r
+mtsamples %>%
+  unnest_ngrams(ngram, transcription, n = 3)
+```
+
+    ## # A tibble: 2,393,686 × 6
+    ##        X description                               medic…¹ sampl…² keywo…³ ngram
+    ##    <int> <chr>                                     <chr>   <chr>   <chr>   <chr>
+    ##  1     0 " A 23-year-old white female presents wi… " Alle… " Alle… allerg… subj…
+    ##  2     0 " A 23-year-old white female presents wi… " Alle… " Alle… allerg… this…
+    ##  3     0 " A 23-year-old white female presents wi… " Alle… " Alle… allerg… 23 y…
+    ##  4     0 " A 23-year-old white female presents wi… " Alle… " Alle… allerg… year…
+    ##  5     0 " A 23-year-old white female presents wi… " Alle… " Alle… allerg… old …
+    ##  6     0 " A 23-year-old white female presents wi… " Alle… " Alle… allerg… whit…
+    ##  7     0 " A 23-year-old white female presents wi… " Alle… " Alle… allerg… fema…
+    ##  8     0 " A 23-year-old white female presents wi… " Alle… " Alle… allerg… pres…
+    ##  9     0 " A 23-year-old white female presents wi… " Alle… " Alle… allerg… with…
+    ## 10     0 " A 23-year-old white female presents wi… " Alle… " Alle… allerg… comp…
+    ## # … with 2,393,676 more rows, and abbreviated variable names
+    ## #   ¹​medical_specialty, ²​sample_name, ³​keywords
 
 ------------------------------------------------------------------------
 
