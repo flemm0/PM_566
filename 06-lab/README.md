@@ -27,6 +27,8 @@ way), `ggplot2` and `tidytext`.
 ``` r
 library(tidyverse)
 library(tidytext)
+library(knitr)
+library(forcats)
 ```
 
 ### read in Medical Transcriptions
@@ -69,45 +71,70 @@ categories do we have? Are these catagories related? overlapping? evenly
 distributed?
 
 ``` r
-mtsamples %>%
+specialties <- mtsamples %>%
   count(medical_specialty, sort = TRUE)
+
+knitr::kable(specialties)
 ```
 
-    ## # A tibble: 40 × 2
-    ##    medical_specialty                    n
-    ##    <chr>                            <int>
-    ##  1 " Surgery"                        1103
-    ##  2 " Consult - History and Phy."      516
-    ##  3 " Cardiovascular / Pulmonary"      372
-    ##  4 " Orthopedic"                      355
-    ##  5 " Radiology"                       273
-    ##  6 " General Medicine"                259
-    ##  7 " Gastroenterology"                230
-    ##  8 " Neurology"                       223
-    ##  9 " SOAP / Chart / Progress Notes"   166
-    ## 10 " Obstetrics / Gynecology"         160
-    ## # … with 30 more rows
+| medical_specialty             |    n |
+|:------------------------------|-----:|
+| Surgery                       | 1103 |
+| Consult - History and Phy.    |  516 |
+| Cardiovascular / Pulmonary    |  372 |
+| Orthopedic                    |  355 |
+| Radiology                     |  273 |
+| General Medicine              |  259 |
+| Gastroenterology              |  230 |
+| Neurology                     |  223 |
+| SOAP / Chart / Progress Notes |  166 |
+| Obstetrics / Gynecology       |  160 |
+| Urology                       |  158 |
+| Discharge Summary             |  108 |
+| ENT - Otolaryngology          |   98 |
+| Neurosurgery                  |   94 |
+| Hematology - Oncology         |   90 |
+| Ophthalmology                 |   83 |
+| Nephrology                    |   81 |
+| Emergency Room Reports        |   75 |
+| Pediatrics - Neonatal         |   70 |
+| Pain Management               |   62 |
+| Psychiatry / Psychology       |   53 |
+| Office Notes                  |   51 |
+| Podiatry                      |   47 |
+| Dermatology                   |   29 |
+| Cosmetic / Plastic Surgery    |   27 |
+| Dentistry                     |   27 |
+| Letters                       |   23 |
+| Physical Medicine - Rehab     |   21 |
+| Sleep Medicine                |   20 |
+| Endocrinology                 |   19 |
+| Bariatrics                    |   18 |
+| IME-QME-Work Comp etc.        |   16 |
+| Chiropractic                  |   14 |
+| Diets and Nutritions          |   10 |
+| Rheumatology                  |   10 |
+| Speech - Language             |    9 |
+| Autopsy                       |    8 |
+| Lab Medicine - Pathology      |    8 |
+| Allergy / Immunology          |    7 |
+| Hospice - Palliative Care     |    6 |
+
+There are 40 medical specialties.
 
 ``` r
-mtsamples %>%
-  count(medical_specialty) %>%
-  unique()
+specialties %>%
+  top_n(10) %>%
+  ggplot(aes(x = n, y = fct_reorder(medical_specialty, n))) +
+  geom_col()
 ```
 
-    ## # A tibble: 40 × 2
-    ##    medical_specialty                 n
-    ##    <chr>                         <int>
-    ##  1 " Allergy / Immunology"           7
-    ##  2 " Autopsy"                        8
-    ##  3 " Bariatrics"                    18
-    ##  4 " Cardiovascular / Pulmonary"   372
-    ##  5 " Chiropractic"                  14
-    ##  6 " Consult - History and Phy."   516
-    ##  7 " Cosmetic / Plastic Surgery"    27
-    ##  8 " Dentistry"                     27
-    ##  9 " Dermatology"                   29
-    ## 10 " Diets and Nutritions"          10
-    ## # … with 30 more rows
+    ## Selecting by n
+
+![](README_files/figure-gfm/plot%20medical-specialties-1.png)<!-- -->  
+The distribution is not uniform among all of the categories. Even within
+the top 10 categories, the distrubution is very uneven. The largest
+category of medical specialty is surgery.
 
 ------------------------------------------------------------------------
 
