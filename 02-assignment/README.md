@@ -383,8 +383,8 @@ ggplot(data = dat, mapping = aes(x = fev, y = bmi, col = obesity_level)) +
 
 ``` r
 ggplot(data = dat, mapping = aes(y = fev, x = smoke_gas_exposure,
-    color = smoke_gas_exposure)) + geom_violin(trim = FALSE,
-    fill = NA) + stat_summary(fun.min = min, fun.max = max, fun = median)
+    color = smoke_gas_exposure)) + stat_summary(fun.min = min,
+    fun.max = max, fun = median)
 ```
 
 ![](README_files/figure-gfm/plot%20stat%20summary%20of%20fev%20by%20smoke/gas%20exposure-1.png)<!-- -->
