@@ -129,14 +129,23 @@ With the stop words removed, we are now left with words that are associated with
 
 repeat question 2, but this time tokenize into bi-grams. how does the result change if you look at tri-grams?
 
-```{r}
+```{r, cache = TRUE}
 mtsamples %>%
-  unnest_ngrams(ngram, transcription, n = 2)
+  unnest_ngrams(bigram, transcription, n = 2) %>%
+  count(bigram, sort = TRUE) %>%
+  top_n(20, n) %>%
+  ggplot(aes(x = n, y = fct_reorder(bigram, n))) +
+  geom_col()
 
 mtsamples %>%
-  unnest_ngrams(ngram, transcription, n = 3)
+  unnest_ngrams(trigram, transcription, n = 3) %>%
+  count(trigram, sort = TRUE) %>%
+  top_n(20, n) %>%
+  ggplot(aes(x = n, y = fct_reorder(trigram, n))) +
+  geom_col()
 ```
-
+\
+Trigrams seemed to turn up a few more medical word groups than bigrams.
 
 ---
 
@@ -144,11 +153,47 @@ mtsamples %>%
 
 Using the results you got from questions 4. Pick a word and count the words that appears after and before it.
 
+```{r count words coming after the word blood, cache = TRUE}
+mtsamples %>%
+  unnest_ngrams(bigram, transcription, n = 2) %>%
+  separate(bigram, into = c("word1", "word2"), sep = " ") %>%
+  select(word1, word2) %>%
+  anti_join(stop_words, by = c("word2" = "word")) %>%
+  filter(word1 == "blood") %>%
+  count(word2, sort = TRUE)
+```
+```{r count words that come before the word blood, cache = TRUE}
+mtsamples %>%
+  unnest_ngrams(bigram, transcription, n = 2) %>%
+  separate(bigram, into = c("word1", "word2"), sep = " ") %>%
+  select(word1, word2) %>%
+  anti_join(stop_words, by = c("word1" = "word")) %>%
+  filter(word2 == "blood") %>%
+  count(word1, sort = TRUE)
+```
+
+
 ---
 
 # Question 6 
 
 Which words are most used in each of the specialties. you can use `group_by()` and `top_n()` from `dplyr` to have the calculations be done within each specialty. Remember to remove stopwords. How about the most 5 used words?
+
+```{r top 5 words per specialty, cache = TRUE}
+mtsamples %>%
+  unnest_tokens(token, transcription) %>%
+  anti_join(stop_words, by = c("token" = "word")) %>%
+  filter( !grepl(pattern = "^[0-9]+$", x = token)) %>%
+  select(medical_specialty, token) %>%
+  group_by(medical_specialty) %>%
+  count(token, sort = TRUE) %>%
+  top_n(5, n) %>%
+  arrange(medical_specialty)
+  
+```
+
+
+
 
 # Question 7 - extra
 

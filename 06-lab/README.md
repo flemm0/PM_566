@@ -198,45 +198,26 @@ result change if you look at tri-grams?
 
 ``` r
 mtsamples %>%
-  unnest_ngrams(ngram, transcription, n = 2)
+  unnest_ngrams(bigram, transcription, n = 2) %>%
+  count(bigram, sort = TRUE) %>%
+  top_n(20, n) %>%
+  ggplot(aes(x = n, y = fct_reorder(bigram, n))) +
+  geom_col()
 ```
 
-    ## # A tibble: 2,398,638 × 6
-    ##        X description                               medic…¹ sampl…² keywo…³ ngram
-    ##    <int> <chr>                                     <chr>   <chr>   <chr>   <chr>
-    ##  1     0 " A 23-year-old white female presents wi… " Alle… " Alle… allerg… subj…
-    ##  2     0 " A 23-year-old white female presents wi… " Alle… " Alle… allerg… this…
-    ##  3     0 " A 23-year-old white female presents wi… " Alle… " Alle… allerg… 23 y…
-    ##  4     0 " A 23-year-old white female presents wi… " Alle… " Alle… allerg… year…
-    ##  5     0 " A 23-year-old white female presents wi… " Alle… " Alle… allerg… old …
-    ##  6     0 " A 23-year-old white female presents wi… " Alle… " Alle… allerg… whit…
-    ##  7     0 " A 23-year-old white female presents wi… " Alle… " Alle… allerg… fema…
-    ##  8     0 " A 23-year-old white female presents wi… " Alle… " Alle… allerg… pres…
-    ##  9     0 " A 23-year-old white female presents wi… " Alle… " Alle… allerg… with…
-    ## 10     0 " A 23-year-old white female presents wi… " Alle… " Alle… allerg… comp…
-    ## # … with 2,398,628 more rows, and abbreviated variable names
-    ## #   ¹​medical_specialty, ²​sample_name, ³​keywords
+![](README_files/figure-gfm/unnamed-chunk-1-1.png)<!-- -->
 
 ``` r
 mtsamples %>%
-  unnest_ngrams(ngram, transcription, n = 3)
+  unnest_ngrams(trigram, transcription, n = 3) %>%
+  count(trigram, sort = TRUE) %>%
+  top_n(20, n) %>%
+  ggplot(aes(x = n, y = fct_reorder(trigram, n))) +
+  geom_col()
 ```
 
-    ## # A tibble: 2,393,686 × 6
-    ##        X description                               medic…¹ sampl…² keywo…³ ngram
-    ##    <int> <chr>                                     <chr>   <chr>   <chr>   <chr>
-    ##  1     0 " A 23-year-old white female presents wi… " Alle… " Alle… allerg… subj…
-    ##  2     0 " A 23-year-old white female presents wi… " Alle… " Alle… allerg… this…
-    ##  3     0 " A 23-year-old white female presents wi… " Alle… " Alle… allerg… 23 y…
-    ##  4     0 " A 23-year-old white female presents wi… " Alle… " Alle… allerg… year…
-    ##  5     0 " A 23-year-old white female presents wi… " Alle… " Alle… allerg… old …
-    ##  6     0 " A 23-year-old white female presents wi… " Alle… " Alle… allerg… whit…
-    ##  7     0 " A 23-year-old white female presents wi… " Alle… " Alle… allerg… fema…
-    ##  8     0 " A 23-year-old white female presents wi… " Alle… " Alle… allerg… pres…
-    ##  9     0 " A 23-year-old white female presents wi… " Alle… " Alle… allerg… with…
-    ## 10     0 " A 23-year-old white female presents wi… " Alle… " Alle… allerg… comp…
-    ## # … with 2,393,676 more rows, and abbreviated variable names
-    ## #   ¹​medical_specialty, ²​sample_name, ³​keywords
+![](README_files/figure-gfm/unnamed-chunk-1-2.png)<!-- -->  
+Trigrams seemed to turn up a few more medical word groups than bigrams.
 
 ------------------------------------------------------------------------
 
@@ -244,6 +225,56 @@ mtsamples %>%
 
 Using the results you got from questions 4. Pick a word and count the
 words that appears after and before it.
+
+``` r
+mtsamples %>%
+  unnest_ngrams(bigram, transcription, n = 2) %>%
+  separate(bigram, into = c("word1", "word2"), sep = " ") %>%
+  select(word1, word2) %>%
+  anti_join(stop_words, by = c("word2" = "word")) %>%
+  filter(word1 == "blood") %>%
+  count(word2, sort = TRUE)
+```
+
+    ## # A tibble: 119 × 2
+    ##    word2           n
+    ##    <chr>       <int>
+    ##  1 pressure     1265
+    ##  2 loss          965
+    ##  3 cell          130
+    ##  4 cells         112
+    ##  5 sugar          91
+    ##  6 sugars         79
+    ##  7 cultures       53
+    ##  8 flow           45
+    ##  9 transfusion    42
+    ## 10 glucose        37
+    ## # … with 109 more rows
+
+``` r
+mtsamples %>%
+  unnest_ngrams(bigram, transcription, n = 2) %>%
+  separate(bigram, into = c("word1", "word2"), sep = " ") %>%
+  select(word1, word2) %>%
+  anti_join(stop_words, by = c("word1" = "word")) %>%
+  filter(word2 == "blood") %>%
+  count(word1, sort = TRUE)
+```
+
+    ## # A tibble: 361 × 2
+    ##    word1         n
+    ##    <chr>     <int>
+    ##  1 estimated   754
+    ##  2 white       180
+    ##  3 signs       170
+    ##  4 red         123
+    ##  5 pounds       48
+    ##  6 cold         29
+    ##  7 18           28
+    ##  8 cord         28
+    ##  9 fasting      28
+    ## 10 elevated     27
+    ## # … with 351 more rows
 
 ------------------------------------------------------------------------
 
@@ -253,6 +284,34 @@ Which words are most used in each of the specialties. you can use
 `group_by()` and `top_n()` from `dplyr` to have the calculations be done
 within each specialty. Remember to remove stopwords. How about the most
 5 used words?
+
+``` r
+mtsamples %>%
+  unnest_tokens(token, transcription) %>%
+  anti_join(stop_words, by = c("token" = "word")) %>%
+  filter( !grepl(pattern = "^[0-9]+$", x = token)) %>%
+  select(medical_specialty, token) %>%
+  group_by(medical_specialty) %>%
+  count(token, sort = TRUE) %>%
+  top_n(5, n) %>%
+  arrange(medical_specialty)
+```
+
+    ## # A tibble: 210 × 3
+    ## # Groups:   medical_specialty [40]
+    ##    medical_specialty       token         n
+    ##    <chr>                   <chr>     <int>
+    ##  1 " Allergy / Immunology" history      38
+    ##  2 " Allergy / Immunology" noted        23
+    ##  3 " Allergy / Immunology" patient      22
+    ##  4 " Allergy / Immunology" allergies    21
+    ##  5 " Allergy / Immunology" nasal        13
+    ##  6 " Allergy / Immunology" past         13
+    ##  7 " Autopsy"              left         83
+    ##  8 " Autopsy"              inch         59
+    ##  9 " Autopsy"              neck         55
+    ## 10 " Autopsy"              anterior     47
+    ## # … with 200 more rows
 
 # Question 7 - extra
 
