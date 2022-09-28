@@ -172,7 +172,6 @@ mtsamples %>%
   count(word1, sort = TRUE)
 ```
 
-
 ---
 
 # Question 6 
@@ -188,8 +187,8 @@ mtsamples %>%
   group_by(medical_specialty) %>%
   count(token, sort = TRUE) %>%
   top_n(5, n) %>%
-  arrange(medical_specialty)
-  
+  arrange(medical_specialty) %>%
+  knitr::kable()
 ```
 
 
