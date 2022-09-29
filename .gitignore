@@ -1,4 +1,7 @@
 .Rproj.user
 .Rhistory
+*.Rdata
 .DS_Store
 *lab/README_cache*
+*.csv
+*.gz
