@@ -1,7 +1,7 @@
 Assignment 02: Data Viz and Wrangling
 ================
 Flemming Wu
-2022-09-27
+2022-09-29
 
 For this assignment, we will be analyzing data from USC’s Children’s
 Health Study. The learning objectives are to conduct data wrangling and
@@ -113,55 +113,34 @@ dat <- merge(
   by.y = c("hispanic", "male")
 )
 
-head(dat, n = 3)
+head(dat[, hispanic:educ_parent]) %>%
+  knitr::kable()
 ```
 
-    ##    hispanic male agepft_avg height_avg weight_avg  bmi_avg smoke_avg asthma_avg
-    ## 1:        0    0   9.849789    138.972   77.39564 18.05281 0.1522989  0.1239193
-    ## 2:        0    0   9.849789    138.972   77.39564 18.05281 0.1522989  0.1239193
-    ## 3:        0    0   9.849789    138.972   77.39564 18.05281 0.1522989  0.1239193
-    ##    gasstove_avg  fev_avg townname sid race    agepft height weight      bmi
-    ## 1:    0.7291066 1945.743   Alpine 835    W 10.099932    143     69 15.33749
-    ## 2:    0.7291066 1945.743   Alpine 840    W  9.965777    146     78 16.63283
-    ## 3:    0.7291066 1945.743   Alpine 860    W  9.946612    142     64 14.42715
-    ##    asthma active_asthma father_asthma mother_asthma wheeze hayfever allergy
-    ## 1:      0             0             0             0      0        0       1
-    ## 2:      0             0             0             0      0        0       0
-    ## 3:      0             0             0             0      0        0       0
-    ##    educ_parent smoke pets gasstove      fev      fvc     mmef pm25_mass
-    ## 1:           3     0    1        0 2529.276 2826.316 3406.579      8.74
-    ## 2:          NA    NA    0       NA 2466.791 2638.221 3466.464      8.74
-    ## 3:           2     0    0        1 1759.866 2194.314 1695.652      8.74
-    ##    pm25_so4 pm25_no3 pm25_nh4 pm25_oc pm25_ec pm25_om pm10_oc pm10_ec pm10_tc
-    ## 1:     1.73     1.59     0.88    2.54    0.48    3.04    3.25    0.49    3.75
-    ## 2:     1.73     1.59     0.88    2.54    0.48    3.04    3.25    0.49    3.75
-    ## 3:     1.73     1.59     0.88    2.54    0.48    3.04    3.25    0.49    3.75
-    ##    formic acetic  hcl hno3 o3_max o3106 o3_24   no2  pm10 no_24hr pm2_5_fr
-    ## 1:   1.03   2.49 0.41 1.98  65.82 55.05 41.23 12.18 24.73    2.48    10.28
-    ## 2:   1.03   2.49 0.41 1.98  65.82 55.05 41.23 12.18 24.73    2.48    10.28
-    ## 3:   1.03   2.49 0.41 1.98  65.82 55.05 41.23 12.18 24.73    2.48    10.28
-    ##    iacid oacid total_acids       lon      lat
-    ## 1:  2.39  3.52         5.5 -116.7664 32.83505
-    ## 2:  2.39  3.52         5.5 -116.7664 32.83505
-    ## 3:  2.39  3.52         5.5 -116.7664 32.83505
+| hispanic | male | agepft_avg | height_avg | weight_avg |  bmi_avg | smoke_avg | asthma_avg | gasstove_avg |  fev_avg | townname | sid | race |    agepft | height | weight |      bmi | asthma | active_asthma | father_asthma | mother_asthma | wheeze | hayfever | allergy | educ_parent |
+|---------:|-----:|-----------:|-----------:|-----------:|---------:|----------:|-----------:|-------------:|---------:|:---------|----:|:-----|----------:|-------:|-------:|---------:|-------:|--------------:|--------------:|--------------:|-------:|---------:|--------:|------------:|
+|        0 |    0 |   9.849789 |    138.972 |   77.39564 | 18.05281 | 0.1522989 |  0.1239193 |    0.7291066 | 1945.743 | Alpine   | 835 | W    | 10.099932 |    143 |     69 | 15.33749 |      0 |             0 |             0 |             0 |      0 |        0 |       1 |           3 |
+|        0 |    0 |   9.849789 |    138.972 |   77.39564 | 18.05281 | 0.1522989 |  0.1239193 |    0.7291066 | 1945.743 | Alpine   | 840 | W    |  9.965777 |    146 |     78 | 16.63283 |      0 |             0 |             0 |             0 |      0 |        0 |       0 |          NA |
+|        0 |    0 |   9.849789 |    138.972 |   77.39564 | 18.05281 | 0.1522989 |  0.1239193 |    0.7291066 | 1945.743 | Alpine   | 860 | W    |  9.946612 |    142 |     64 | 14.42715 |      0 |             0 |             0 |             0 |      0 |        0 |       0 |           2 |
+|        0 |    0 |   9.849789 |    138.972 |   77.39564 | 18.05281 | 0.1522989 |  0.1239193 |    0.7291066 | 1945.743 | Alpine   | 865 | W    | 10.039699 |    162 |    140 | 24.24797 |      1 |             1 |             0 |             0 |      1 |        0 |       1 |           3 |
+|        0 |    0 |   9.849789 |    138.972 |   77.39564 | 18.05281 | 0.1522989 |  0.1239193 |    0.7291066 | 1945.743 | Alpine   | 873 | W    |  9.804244 |    140 |    101 | 23.42301 |      0 |             0 |             0 |             0 |      0 |        0 |       0 |           3 |
+|        0 |    0 |   9.849789 |    138.972 |   77.39564 | 18.05281 | 0.1522989 |  0.1239193 |    0.7291066 | 1945.743 | Alpine   | 894 | W    |  9.295003 |    150 |     89 | 17.97980 |      0 |             0 |             0 |             0 |     NA |        1 |       1 |           2 |
+
+The imputed average columns have been successfully added to the data
+table.  
+
+Next, impute NA values with averages from \*\_avg columns
 
 ``` r
-#impute NAs with averages from _avg columns
-dat[,
-     c("agepft", "height", "weight", "bmi", "smoke", "asthma", "gasstove", "fev") :=
-     .(
-       fifelse(is.na(agepft), agepft_avg, agepft),
-       fifelse(is.na(height), height_avg, height),
-       fifelse(is.na(weight), weight_avg, weight),
-       fifelse(is.na(bmi), bmi_avg, bmi),
-       fifelse(is.na(smoke), smoke_avg, smoke),
-       fifelse(is.na(asthma), asthma_avg, asthma),
-       fifelse(is.na(gasstove), gasstove_avg, gasstove),
-       fifelse(is.na(fev), fev_avg, fev)
-     )
-     ]
+dat[, `:=`(c("agepft", "height", "weight", "bmi", "smoke", "asthma",
+    "gasstove", "fev"), .(fifelse(is.na(agepft), agepft_avg,
+    agepft), fifelse(is.na(height), height_avg, height), fifelse(is.na(weight),
+    weight_avg, weight), fifelse(is.na(bmi), bmi_avg, bmi), fifelse(is.na(smoke),
+    smoke_avg, smoke), fifelse(is.na(asthma), asthma_avg, asthma),
+    fifelse(is.na(gasstove), gasstove_avg, gasstove), fifelse(is.na(fev),
+        fev_avg, fev)))]
 
-#check that there are no more NAs in the important columns
+# check that there are no more NAs in the important columns
 sum(is.na(dat[, ..in_names]))
 ```
 
@@ -184,14 +163,16 @@ dat[, `:=`(obesity_level, fifelse(bmi < 14, "underweight", fifelse(bmi >=
 Create summary table to verify new column.
 
 ``` r
-dat[, .(min_bmi = min(bmi), max_bmi = max(bmi)), by = obesity_level][order(min_bmi)]
+dat[, .(min_bmi = min(bmi), max_bmi = max(bmi)), by = obesity_level][order(min_bmi)] %>%
+    knitr::kable()
 ```
 
-    ##    obesity_level  min_bmi  max_bmi
-    ## 1:   underweight 11.29640 13.98601
-    ## 2:        normal 14.00380 21.96387
-    ## 3:    overweight 22.02353 23.99650
-    ## 4:         obese 24.00647 41.26613
+| obesity_level |  min_bmi |  max_bmi |
+|:--------------|---------:|---------:|
+| underweight   | 11.29640 | 13.98601 |
+| normal        | 14.00380 | 21.96387 |
+| overweight    | 22.02353 | 23.99650 |
+| obese         | 24.00647 | 41.26613 |
 
 ###### 3. Create another categorical variable named “smoke_gas_exposure” that summarizes “Second Hand Smoke” and “Gas Stove.” The variable should have four categories in total.
 
@@ -219,7 +200,8 @@ It appears that the imputed average for smoke exposure is closer to 0,
 and the imputed average for gas exposure is closer to 1. When creating
 the smoke and gas exposure category, those that have smoke exposure = 1
 will qualify. As for the gas exposure, those that have gasstove != 0
-will qualify.
+will qualify. Essentially, I will be rounding the smoke exposure values
+up to 1 and the gasstove exposure values down to 0.
 
 ``` r
 dat[, `:=`(smoke_gas_exposure, fifelse(smoke == 1 & gasstove !=

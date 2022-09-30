@@ -88,9 +88,15 @@ dat <- merge(
   by.y = c("hispanic", "male")
 )
 
-head(dat, n = 3)
+head(dat[, hispanic:educ_parent]) %>%
+  knitr::kable()
 
-#impute NAs with averages from _avg columns
+```
+The imputed average columns have been successfully added to the data table.
+\
+
+Next, impute NA values with averages from *_avg columns
+```{r impute NAs with averages from _avg columns}
 dat[,
      c("agepft", "height", "weight", "bmi", "smoke", "asthma", "gasstove", "fev") :=
      .(
@@ -126,7 +132,8 @@ dat[,
 
 Create summary table to verify new column.
 ```{r summary table of new column}
-dat[, .(min_bmi = min(bmi), max_bmi = max(bmi)), by = obesity_level][order(min_bmi)]
+dat[, .(min_bmi = min(bmi), max_bmi = max(bmi)), by = obesity_level][order(min_bmi)] %>%
+  knitr::kable()
 ```
 
 
@@ -135,7 +142,7 @@ dat[, .(min_bmi = min(bmi), max_bmi = max(bmi)), by = obesity_level][order(min_b
 ```{r consider imputed values}
 dat[(smoke %between% c(0.001,0.999)) & (gasstove %between% c(0.001,0.999)), .(smoke, gasstove)]
 ```
-It appears that the imputed average for smoke exposure is closer to 0, and the imputed average for gas exposure is closer to 1. When creating the smoke and gas exposure category, those that have smoke exposure = 1 will qualify. As for the gas exposure, those that have gasstove != 0 will qualify.
+It appears that the imputed average for smoke exposure is closer to 0, and the imputed average for gas exposure is closer to 1. When creating the smoke and gas exposure category, those that have smoke exposure = 1 will qualify. As for the gas exposure, those that have gasstove != 0 will qualify. Essentially, I will be rounding the smoke exposure values up to 1 and the gasstove exposure values down to 0.
 
 ```{r create smoke/gas category}
 dat[,
@@ -150,16 +157,20 @@ dat[,
 ```{r four summary tables}
 
 #fev and asthma by town name
-dat[, .(avg_fev = mean(fev), std_fev = sd(fev), avg_asthma = mean(asthma), asthma_std = sd(asthma)), by = townname]
+dat[, .(avg_fev = mean(fev), std_fev = sd(fev), prop_asthma = mean(asthma), asthma_std = sd(asthma)), by = townname] %>%
+  knitr::kable()
 
 #fev and asthma by sex
-dat[, .(avg_fev = mean(fev), std_fev = sd(fev), avg_asthma = mean(asthma), asthma_std = sd(asthma)), by = male]
+dat[, .(avg_fev = mean(fev), std_fev = sd(fev), prop_asthma = mean(asthma), asthma_std = sd(asthma)), by = male] %>%
+  knitr::kable()
 
 #fev and asthma by obesity level
-dat[, .(avg_fev = mean(fev), std_fev = sd(fev), avg_asthma = mean(asthma), asthma_std = sd(asthma)), by = obesity_level]
+dat[, .(avg_fev = mean(fev), std_fev = sd(fev), prop_asthma = mean(asthma), asthma_std = sd(asthma)), by = obesity_level] %>%
+  knitr::kable()
 
 #fev and asthma by smoke and gas exposure
-dat[, .(avg_fev = mean(fev), std_fev = sd(fev), avg_asthma = mean(asthma), asthma_std = sd(asthma)), by = smoke_gas_exposure]
+dat[, .(avg_fev = mean(fev), std_fev = sd(fev), prop_asthma = mean(asthma), asthma_std = sd(asthma)), by = smoke_gas_exposure] %>%
+  knitr::kable()
 ```
 
 
@@ -180,7 +191,7 @@ ggplot(dat, aes(bmi, fev, color = townname)) +
   facet_wrap(~ townname, nrow = 3)
 ```
 \
-The plots above show that forced expiratory volume and body mass index are positively correlated in each of the towns in the data set. Additionally, towns such as Alpine and Riverside have a relatively low positive slope, whereas towns such as San Dimas, Lake Elsinore, and Upland much steeper positive slopes. This suggests that the positive correlation between bmi and fev varies by region.
+The plots above show that forced expiratory volume and body mass index are positively correlated in each of the towns in the data set. Additionally, towns such as Alpine and Riverside have a relatively low positive slope, whereas towns such as San Dimas, Lake Elsinore, and Upland have steeper positive slopes. This suggests that the positive correlation between body mass index and forced expiratory volume varies slightly by region.
 
 ######   2. Stacked histograms of FEV by BMI category and FEV by smoke/gas exposure. Use different color schemes than the ggplot default.
 
@@ -199,7 +210,7 @@ grid.arrange(p1, p2, ncol = 1)
 ```
 \
 Of the two histograms above, the one on top reveals that most people in the data set fall under the normal obesity level category, and that the average forced expiratory volume (fev) for people in this category lies at about 2000 with a normal distribution. As for people in the underweight category, the average fev is lower than that of those in the normal category, at about 1750. For people in both the overweight and obese categories, the average fev lies about at 2300, which is higher than the average for the people in the normal category.\
-The histogram on the bottom reveals that most people in the data set are classified as either having exposure to both gas and smoke, or gas only. Additionally, most of the people in each category have an average fev of about 2000, with a standard deviation of about 300. 
+The histogram on the bottom reveals that most people in the data set are classified as either having exposure to both gas and smoke, or gas only. Additionally, all of the categories have an average fev of about 2000, with a standard deviation of about 300. 
 
 ######  3. Barchart of BMI by smoke/gas exposure. \
 ```{r bmi vs smoke/gas barchart}
@@ -226,7 +237,7 @@ ggplot(data = dat, mapping = aes(y = fev, x = smoke_gas_exposure, color = smoke_
   stat_summary(fun.min = min, fun.max = max, fun = median)
 ```
 \
-The stat summary above reveals that when looking at fev by smoke and gas exposure, there the median fev for the groups all lie at 2000. The groups having no exposure to smoke or gas, as well as the group exposed to smoke only have medians slightly higher than the other two groups. Additionally, the range of observations for the groups exposed to neither and gas are greater than for the other two groups.
+The stat summary above reveals that when looking at fev by smoke and gas exposure, there the median fev for the groups all lie at 2000. The groups having no exposure to smoke or gas, as well as the group exposed to smoke only, have medians slightly higher than the other two groups. Additionally, the range of observations for the groups exposed to neither smoke nor gas, and gas only, are greater than for the other two groups.
 
 ######  5. A leaflet map showing the concentrations of PM2.5 mass in each of the CHS communities.\
 ```{r plot leaflet map, warning=FALSE}
@@ -237,11 +248,11 @@ qpal_labs <- unique(sort(dat[, pm25_mass]))
 
 leaflet(dat) %>%
   addProviderTiles(providers$CartoDB.Positron) %>%
-  addCircles(lat = ~lat, lng = ~lon, color = ~qpal(pm25_mass), radius = 200, fillOpacity = 1) %>%
-  addLegend(colors = qpal_colors, labels = qpal_labs, title = "conc. of PM 2.5 mass")
+  addCircles(lat = ~lat, lng = ~lon, color = ~qpal(pm25_mass), radius = 400, fillOpacity = 1) %>%
+  addLegend(colors = qpal_colors, labels = qpal_labs, title = "conc. of PM 2.5 mass", position = "topright", opacity = 0.5)
 ```
 \
-The leaflet plot above reveals that higher concentration levels of pm 2.5 are associated with large, urban population centers, in this case around the greater Los Angeles area. Only in areas such as Santa Barbara or San Luis Obispo that are further from large population centers and closer to the coastline are low concentration levels of pm 2.5 (below 8) are observed.
+The leaflet plot above reveals that higher concentration levels of pm 2.5 are associated with large, urban population centers, in this case around the greater Los Angeles area. Only in areas such as Santa Barbara or San Luis Obispo that are further from large population centers and closer to the coastline are low concentration levels of pm 2.5 of below 8 observed.
 
 ######  6. Choose a visualization to examine whether PM2.5 mass is associated with FEV.\
 ```{r pm25 mass and fev association grouped boxplots}
