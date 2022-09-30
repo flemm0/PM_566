@@ -213,57 +213,65 @@ dat[, `:=`(smoke_gas_exposure, fifelse(smoke == 1 & gasstove !=
 
 ``` r
 # fev and asthma by town name
-dat[, .(avg_fev = mean(fev), std_fev = sd(fev), avg_asthma = mean(asthma),
-    asthma_std = sd(asthma)), by = townname]
+dat[, .(avg_fev = mean(fev), std_fev = sd(fev), prop_asthma = mean(asthma),
+    asthma_std = sd(asthma)), by = townname] %>%
+    knitr::kable()
 ```
 
-    ##          townname  avg_fev  std_fev avg_asthma asthma_std
-    ##  1:        Alpine 2087.101 291.1768  0.1144423  0.3139348
-    ##  2:    Atascadero 2075.897 324.0935  0.2528408  0.4340107
-    ##  3: Lake Elsinore 2038.849 303.6956  0.1274366  0.3255095
-    ##  4:  Lake Gregory 2084.700 319.9593  0.1512392  0.3585609
-    ##  5:     Lancaster 2003.044 317.1298  0.1640054  0.3674206
-    ##  6:        Lompoc 2034.354 351.0454  0.1142335  0.3139431
-    ##  7:    Long Beach 1985.861 319.4625  0.1359886  0.3370219
-    ##  8:     Mira Loma 1985.202 324.9634  0.1582359  0.3572088
-    ##  9:     Riverside 1989.881 277.5065  0.1100000  0.3144660
-    ## 10:     San Dimas 2026.794 318.7845  0.1712392  0.3771647
-    ## 11:   Santa Maria 2025.750 312.1725  0.1348240  0.3372912
-    ## 12:        Upland 2024.266 343.1637  0.1212392  0.3263737
+| townname      |  avg_fev |  std_fev | prop_asthma | asthma_std |
+|:--------------|---------:|---------:|------------:|-----------:|
+| Alpine        | 2087.101 | 291.1768 |   0.1144423 |  0.3139348 |
+| Atascadero    | 2075.897 | 324.0935 |   0.2528408 |  0.4340107 |
+| Lake Elsinore | 2038.849 | 303.6956 |   0.1274366 |  0.3255095 |
+| Lake Gregory  | 2084.700 | 319.9593 |   0.1512392 |  0.3585609 |
+| Lancaster     | 2003.044 | 317.1298 |   0.1640054 |  0.3674206 |
+| Lompoc        | 2034.354 | 351.0454 |   0.1142335 |  0.3139431 |
+| Long Beach    | 1985.861 | 319.4625 |   0.1359886 |  0.3370219 |
+| Mira Loma     | 1985.202 | 324.9634 |   0.1582359 |  0.3572088 |
+| Riverside     | 1989.881 | 277.5065 |   0.1100000 |  0.3144660 |
+| San Dimas     | 2026.794 | 318.7845 |   0.1712392 |  0.3771647 |
+| Santa Maria   | 2025.750 | 312.1725 |   0.1348240 |  0.3372912 |
+| Upland        | 2024.266 | 343.1637 |   0.1212392 |  0.3263737 |
 
 ``` r
 # fev and asthma by sex
-dat[, .(avg_fev = mean(fev), std_fev = sd(fev), avg_asthma = mean(asthma),
-    asthma_std = sd(asthma)), by = male]
+dat[, .(avg_fev = mean(fev), std_fev = sd(fev), prop_asthma = mean(asthma),
+    asthma_std = sd(asthma)), by = male] %>%
+    knitr::kable()
 ```
 
-    ##    male  avg_fev  std_fev avg_asthma asthma_std
-    ## 1:    0 1958.911 311.9181  0.1208035  0.3224043
-    ## 2:    1 2103.787 307.5123  0.1726819  0.3728876
+| male |  avg_fev |  std_fev | prop_asthma | asthma_std |
+|-----:|---------:|---------:|------------:|-----------:|
+|    0 | 1958.911 | 311.9181 |   0.1208035 |  0.3224043 |
+|    1 | 2103.787 | 307.5123 |   0.1726819 |  0.3728876 |
 
 ``` r
 # fev and asthma by obesity level
-dat[, .(avg_fev = mean(fev), std_fev = sd(fev), avg_asthma = mean(asthma),
-    asthma_std = sd(asthma)), by = obesity_level]
+dat[, .(avg_fev = mean(fev), std_fev = sd(fev), prop_asthma = mean(asthma),
+    asthma_std = sd(asthma)), by = obesity_level] %>%
+    knitr::kable()
 ```
 
-    ##    obesity_level  avg_fev  std_fev avg_asthma asthma_std
-    ## 1:        normal 1999.794 295.1964 0.14036063  0.3426863
-    ## 2:         obese 2266.154 325.4710 0.20819643  0.4034416
-    ## 3:    overweight 2224.322 317.4261 0.16409910  0.3687886
-    ## 4:   underweight 1698.327 303.3983 0.08571429  0.2840286
+| obesity_level |  avg_fev |  std_fev | prop_asthma | asthma_std |
+|:--------------|---------:|---------:|------------:|-----------:|
+| normal        | 1999.794 | 295.1964 |   0.1403606 |  0.3426863 |
+| obese         | 2266.154 | 325.4710 |   0.2081964 |  0.4034416 |
+| overweight    | 2224.322 | 317.4261 |   0.1640991 |  0.3687886 |
+| underweight   | 1698.327 | 303.3983 |   0.0857143 |  0.2840286 |
 
 ``` r
 # fev and asthma by smoke and gas exposure
-dat[, .(avg_fev = mean(fev), std_fev = sd(fev), avg_asthma = mean(asthma),
-    asthma_std = sd(asthma)), by = smoke_gas_exposure]
+dat[, .(avg_fev = mean(fev), std_fev = sd(fev), prop_asthma = mean(asthma),
+    asthma_std = sd(asthma)), by = smoke_gas_exposure] %>%
+    knitr::kable()
 ```
 
-    ##    smoke_gas_exposure  avg_fev  std_fev avg_asthma asthma_std
-    ## 1:            neither 2056.693 328.7843  0.1448168  0.3487352
-    ## 2:                gas 2022.671 319.3449  0.1491750  0.3519572
-    ## 3:              smoke 2055.714 295.6475  0.1717490  0.3768879
-    ## 4:               both 2024.778 300.6313  0.1277738  0.3291856
+| smoke_gas_exposure |  avg_fev |  std_fev | prop_asthma | asthma_std |
+|:-------------------|---------:|---------:|------------:|-----------:|
+| neither            | 2056.693 | 328.7843 |   0.1448168 |  0.3487352 |
+| gas                | 2022.671 | 319.3449 |   0.1491750 |  0.3519572 |
+| smoke              | 2055.714 | 295.6475 |   0.1717490 |  0.3768879 |
+| both               | 2024.778 | 300.6313 |   0.1277738 |  0.3291856 |
 
 ### Looking at the Data (EDA)
 
@@ -291,8 +299,9 @@ The plots above show that forced expiratory volume and body mass index
 are positively correlated in each of the towns in the data set.
 Additionally, towns such as Alpine and Riverside have a relatively low
 positive slope, whereas towns such as San Dimas, Lake Elsinore, and
-Upland much steeper positive slopes. This suggests that the positive
-correlation between bmi and fev varies by region.
+Upland have steeper positive slopes. This suggests that the positive
+correlation between body mass index and forced expiratory volume varies
+slightly by region.
 
 ###### 2. Stacked histograms of FEV by BMI category and FEV by smoke/gas exposure. Use different color schemes than the ggplot default.
 
@@ -332,8 +341,8 @@ obese categories, the average fev lies about at 2300, which is higher
 than the average for the people in the normal category.  
 The histogram on the bottom reveals that most people in the data set are
 classified as either having exposure to both gas and smoke, or gas only.
-Additionally, most of the people in each category have an average fev of
-about 2000, with a standard deviation of about 300.
+Additionally, all of the categories have an average fev of about 2000,
+with a standard deviation of about 300.
 
 ###### 3. Barchart of BMI by smoke/gas exposure. 
 
@@ -382,9 +391,10 @@ ggplot(data = dat, mapping = aes(y = fev, x = smoke_gas_exposure,
 The stat summary above reveals that when looking at fev by smoke and gas
 exposure, there the median fev for the groups all lie at 2000. The
 groups having no exposure to smoke or gas, as well as the group exposed
-to smoke only have medians slightly higher than the other two groups.
+to smoke only, have medians slightly higher than the other two groups.
 Additionally, the range of observations for the groups exposed to
-neither and gas are greater than for the other two groups.
+neither smoke nor gas, and gas only, are greater than for the other two
+groups.
 
 ###### 5. A leaflet map showing the concentrations of PM2.5 mass in each of the CHS communities. 
 
@@ -397,8 +407,9 @@ qpal_labs <- unique(sort(dat[, pm25_mass]))
 leaflet(dat) %>%
     addProviderTiles(providers$CartoDB.Positron) %>%
     addCircles(lat = ~lat, lng = ~lon, color = ~qpal(pm25_mass),
-        radius = 200, fillOpacity = 1) %>%
-    addLegend(colors = qpal_colors, labels = qpal_labs, title = "conc. of PM 2.5 mass")
+        radius = 400, fillOpacity = 1) %>%
+    addLegend(colors = qpal_colors, labels = qpal_labs, title = "conc. of PM 2.5 mass",
+        position = "topright", opacity = 0.5)
 ```
 
 ![](README_files/figure-gfm/plot%20leaflet%20map-1.png)<!-- -->  
@@ -406,8 +417,8 @@ The leaflet plot above reveals that higher concentration levels of pm
 2.5 are associated with large, urban population centers, in this case
 around the greater Los Angeles area. Only in areas such as Santa Barbara
 or San Luis Obispo that are further from large population centers and
-closer to the coastline are low concentration levels of pm 2.5 (below 8)
-are observed.
+closer to the coastline are low concentration levels of pm 2.5 of below
+8 observed.
 
 ###### 6. Choose a visualization to examine whether PM2.5 mass is associated with FEV. 
 
