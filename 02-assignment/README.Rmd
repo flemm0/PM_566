@@ -9,7 +9,7 @@ always_allow_html: true
 For this assignment, we will be analyzing data from USC’s Children’s Health Study. The learning objectives are to conduct data wrangling and visualize the data with key questions in mind.
 
 ### Data Wrangling
-You will need to download two datasets from https://github.com/USCbiostats/data-science-data. The individual and regional CHS datasets in 01_chs. The individual data includes personal and health characteristics of children in 12 communities across Southern California. The regional data include air quality measurements at the community level. Once downloaded, you can merge these datasets using the location variable. Once combined, you will need to do the following:
+You will need to download two datasets from https://github.com/USCbiostats/data-science-data. The individual and regional CHS datasets in 01_chs. The individual data includes personal and health characteristics of children in 12 communities across Southern California. The regional data include air quality measurements at the community level. Once downloaded, you can merge these datasets using the location variable. 
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
@@ -54,7 +54,7 @@ Merge data tables and ensure dimensions are correct.
 ```{r merging data}
 #Check rows
 dim(individual) #merged data table should contain 1200 rows
-dim(regional) #merged data table should have 23 + 26 columns
+dim(regional) #merged data table should have 23 + 27 - 1 columns
 
 dat <- merge(x = individual, y = regional, by.x = "townname", by.y = "townname")
 
@@ -64,7 +64,7 @@ dim(dat) #1200 rows and 49 columns as expected
 
 Impute missing values with averages within variables "male" and "hispanic"
 ```{r view missing data}
-#get columns that have na count greater than 0, and pass them into a vector
+#look at which columns have NA count greater than 0
 which(colSums(is.na(dat)) > 0)
 ```
 
@@ -72,10 +72,11 @@ which(colSums(is.na(dat)) > 0)
 
 #select most important columns to impute NAs and assign to "in_names"
 in_names  <- c("agepft", "height", "weight", "bmi", "smoke", "asthma", "gasstove", "fev")
-out_names <- paste0(in_names, "_avg")
+out_names <- paste0(in_names, "_avg") #suffix for "out_names" will be _avg
+
 dat <- merge(
   
-  #group by variables hispanic and male, then compute the mean of in_names for each group and assign to temporary variable x
+  #group by variables "hispanic" and "male", then compute the mean of in_names for each group and assign to temporary variable x
   x = dat[,
   setNames(lapply(.SD, mean, na.rm = TRUE), out_names),
   .SDcols = in_names, 
@@ -88,6 +89,7 @@ dat <- merge(
   by.y = c("hispanic", "male")
 )
 
+#check results
 head(dat[, hispanic:educ_parent]) %>%
   knitr::kable()
 
@@ -135,10 +137,12 @@ Create summary table to verify new column.
 dat[, .(min_bmi = min(bmi), max_bmi = max(bmi)), by = obesity_level][order(min_bmi)] %>%
   knitr::kable()
 ```
-
+The bmi variables have been categorized as intended.
 
 
 ###### 3. Create another categorical variable named “smoke_gas_exposure” that summarizes “Second Hand Smoke” and “Gas Stove.” The variable should have four categories in total.
+
+As some values will have been imputed with averages, I will view the variables
 ```{r consider imputed values}
 dat[(smoke %between% c(0.001,0.999)) & (gasstove %between% c(0.001,0.999)), .(smoke, gasstove)]
 ```
@@ -182,6 +186,47 @@ The primary questions of interest are: \
 
 Follow the EDA checklist from week 3 and the previous assignment. Be sure to focus on the key variables. Visualization Create the following figures and interpret them. Be sure to include easily understandable axes, titles, and legends. \
 
+Check dimensions, headers, footers, and variable types.
+
+```{r check dimensions of data frame}
+dim(dat)
+```
+Dimensions look correct, the number of observations remained the same as the earlier check, and there are two additional columns (for the two categorical variables that were created)
+
+```{r check header and footer}
+head(dat) %>%
+  knitr::kable()
+
+tail(dat) %>%
+  knitr::kable()
+```
+```{r check variable types}
+str(dat)
+```
+The variables appear to be stored in the correct data type.
+
+\
+Take closer look at key variables and calculate initial summary statistics.
+
+The key variables are fev, smoke and gas exposure, pm 2.5, and bmi.
+
+According to this article from NCBI: \ https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2643211/ \
+the forced expiratory volume of an individual varies by age and gender. First, I need to know what the age range is for individuals in this data set.
+```{r check age range}
+summary(dat[, agepft])
+```
+After verifying on https://github.com/USCbiostats/data-science-data/blob/master/01_chs/chs_codebook.docx that the age numbers are in fact in years, I looked back to the NCBI article to find what range of fev I should expect to see for individuals at ages 8 to 13. According to the plot in Figure 1, the median fev values found for individuals ages 8 to 13 ranged from below 1 liter to about 3 liters for females and 1 liter to 3.5 liters in males.
+
+```{r check fev}
+#according to the document describing the data, the fev is recorded in ml.
+
+dat[, .(min = min(fev), median = median(fev), max = max(fev)), by = male]
+
+```
+The stats for fev in males and females falls within the range that I would expect them to.
+
+
+
 ######  1. Facet plot showing scatterplots with regression lines of BMI vs FEV by “townname”.\
 
 ```{r facet plot of bmi vs fev}
@@ -195,18 +240,18 @@ The plots above show that forced expiratory volume and body mass index are posit
 
 ######   2. Stacked histograms of FEV by BMI category and FEV by smoke/gas exposure. Use different color schemes than the ggplot default.
 
-```{r histograms of fev by bmi and smoke/gas}
-require(gridExtra)
+```{r histograms of fev by bmi}
 
-p1 <- ggplot(data = dat, mapping = aes(x = fev)) +
-  geom_histogram(mapping = aes(fill = factor(obesity_level)), bins = 70) +
-  scale_fill_manual(values = c("darkseagreen2", "lemonchiffon2", "lightsalmon1", "gold1"))
+ggplot(data = dat, mapping = aes(x = fev)) +
+  geom_histogram(mapping = aes(fill = factor(obesity_level)), bins = 70, position = "dodge", binwidth = 50) +
+  scale_fill_manual(values = c("darkseagreen2", "dodgerblue", "firebrick2", "gold1"))
+```
 
-p2 <- ggplot(data = dat, mapping = aes(x = fev)) +
-  geom_histogram(mapping = aes(fill = factor(smoke_gas_exposure)), bins = 70) +
-  scale_fill_manual(values = c("dodgerblue4", "lightpink", "cadetblue1", "darkorange1"))
+```{r histogram of fev by smoke/gas}
+ggplot(data = dat, mapping = aes(x = fev)) +
+  geom_histogram(mapping = aes(fill = factor(smoke_gas_exposure)), bins = 70, position = "dodge", binwidth = 50) +
+  scale_fill_manual(values = c("dodgerblue4", "lightpink", "cadetblue1", "yellow1"))
 
-grid.arrange(p1, p2, ncol = 1)
 ```
 \
 Of the two histograms above, the one on top reveals that most people in the data set fall under the normal obesity level category, and that the average forced expiratory volume (fev) for people in this category lies at about 2000 with a normal distribution. As for people in the underweight category, the average fev is lower than that of those in the normal category, at about 1750. For people in both the overweight and obese categories, the average fev lies about at 2300, which is higher than the average for the people in the normal category.\

@@ -1,7 +1,7 @@
 Assignment 02: Data Viz and Wrangling
 ================
 Flemming Wu
-2022-09-29
+2022-10-01
 
 For this assignment, we will be analyzing data from USC’s Children’s
 Health Study. The learning objectives are to conduct data wrangling and
@@ -15,7 +15,7 @@ regional CHS datasets in 01_chs. The individual data includes personal
 and health characteristics of children in 12 communities across Southern
 California. The regional data include air quality measurements at the
 community level. Once downloaded, you can merge these datasets using the
-location variable. Once combined, you will need to do the following:
+location variable.
 
 Load libraries
 
@@ -61,7 +61,7 @@ dim(individual)  #merged data table should contain 1200 rows
     ## [1] 1200   23
 
 ``` r
-dim(regional)  #merged data table should have 23 + 26 columns
+dim(regional)  #merged data table should have 23 + 27 - 1 columns
 ```
 
     ## [1] 12 27
@@ -80,8 +80,7 @@ Impute missing values with averages within variables “male” and
 “hispanic”
 
 ``` r
-# get columns that have na count greater than 0, and pass
-# them into a vector
+# look at which columns have NA count greater than 0
 which(colSums(is.na(dat)) > 0)
 ```
 
@@ -97,10 +96,11 @@ which(colSums(is.na(dat)) > 0)
 ``` r
 #select most important columns to impute NAs and assign to "in_names"
 in_names  <- c("agepft", "height", "weight", "bmi", "smoke", "asthma", "gasstove", "fev")
-out_names <- paste0(in_names, "_avg")
+out_names <- paste0(in_names, "_avg") #suffix for "out_names" will be _avg
+
 dat <- merge(
   
-  #group by variables hispanic and male, then compute the mean of in_names for each group and assign to temporary variable x
+  #group by variables "hispanic" and "male", then compute the mean of in_names for each group and assign to temporary variable x
   x = dat[,
   setNames(lapply(.SD, mean, na.rm = TRUE), out_names),
   .SDcols = in_names, 
@@ -113,6 +113,7 @@ dat <- merge(
   by.y = c("hispanic", "male")
 )
 
+#check results
 head(dat[, hispanic:educ_parent]) %>%
   knitr::kable()
 ```
@@ -174,7 +175,12 @@ dat[, .(min_bmi = min(bmi), max_bmi = max(bmi)), by = obesity_level][order(min_b
 | overweight    | 22.02353 | 23.99650 |
 | obese         | 24.00647 | 41.26613 |
 
+The bmi variables have been categorized as intended.
+
 ###### 3. Create another categorical variable named “smoke_gas_exposure” that summarizes “Second Hand Smoke” and “Gas Stove.” The variable should have four categories in total.
+
+As some values will have been imputed with averages, I will view the
+variables
 
 ``` r
 dat[(smoke %between% c(0.001, 0.999)) & (gasstove %between% c(0.001,
@@ -286,6 +292,148 @@ sure to focus on the key variables. Visualization Create the following
 figures and interpret them. Be sure to include easily understandable
 axes, titles, and legends.  
 
+Check dimensions, headers, footers, and variable types.
+
+``` r
+dim(dat)
+```
+
+    ## [1] 1200   51
+
+Dimensions look correct, the number of observations remained the same as
+the earlier check, and there are two additional columns (for the two
+categorical variables that were created)
+
+``` r
+head(dat) %>%
+    knitr::kable()
+```
+
+| hispanic | male | townname | sid | race |    agepft | height | weight |      bmi | asthma | active_asthma | father_asthma | mother_asthma | wheeze | hayfever | allergy | educ_parent |     smoke | pets |  gasstove |      fev |      fvc |     mmef | pm25_mass | pm25_so4 | pm25_no3 | pm25_nh4 | pm25_oc | pm25_ec | pm25_om | pm10_oc | pm10_ec | pm10_tc | formic | acetic |  hcl | hno3 | o3_max | o3106 | o3_24 |   no2 |  pm10 | no_24hr | pm2_5\_fr | iacid | oacid | total_acids |       lon |      lat | obesity_level | smoke_gas_exposure |
+|---------:|-----:|:---------|----:|:-----|----------:|-------:|-------:|---------:|-------:|--------------:|--------------:|--------------:|-------:|---------:|--------:|------------:|----------:|-----:|----------:|---------:|---------:|---------:|----------:|---------:|---------:|---------:|--------:|--------:|--------:|--------:|--------:|--------:|-------:|-------:|-----:|-----:|-------:|------:|------:|------:|------:|--------:|----------:|------:|------:|------------:|----------:|---------:|:--------------|:-------------------|
+|        0 |    0 | Alpine   | 835 | W    | 10.099932 |    143 |     69 | 15.33749 |      0 |             0 |             0 |             0 |      0 |        0 |       1 |           3 | 0.0000000 |    1 | 0.0000000 | 2529.276 | 2826.316 | 3406.579 |      8.74 |     1.73 |     1.59 |     0.88 |    2.54 |    0.48 |    3.04 |    3.25 |    0.49 |    3.75 |   1.03 |   2.49 | 0.41 | 1.98 |  65.82 | 55.05 | 41.23 | 12.18 | 24.73 |    2.48 |     10.28 |  2.39 |  3.52 |         5.5 | -116.7664 | 32.83505 | normal        | neither            |
+|        0 |    0 | Alpine   | 840 | W    |  9.965777 |    146 |     78 | 16.63283 |      0 |             0 |             0 |             0 |      0 |        0 |       0 |          NA | 0.1522989 |    0 | 0.7291066 | 2466.791 | 2638.221 | 3466.464 |      8.74 |     1.73 |     1.59 |     0.88 |    2.54 |    0.48 |    3.04 |    3.25 |    0.49 |    3.75 |   1.03 |   2.49 | 0.41 | 1.98 |  65.82 | 55.05 | 41.23 | 12.18 | 24.73 |    2.48 |     10.28 |  2.39 |  3.52 |         5.5 | -116.7664 | 32.83505 | normal        | gas                |
+|        0 |    0 | Alpine   | 860 | W    |  9.946612 |    142 |     64 | 14.42715 |      0 |             0 |             0 |             0 |      0 |        0 |       0 |           2 | 0.0000000 |    0 | 1.0000000 | 1759.866 | 2194.314 | 1695.652 |      8.74 |     1.73 |     1.59 |     0.88 |    2.54 |    0.48 |    3.04 |    3.25 |    0.49 |    3.75 |   1.03 |   2.49 | 0.41 | 1.98 |  65.82 | 55.05 | 41.23 | 12.18 | 24.73 |    2.48 |     10.28 |  2.39 |  3.52 |         5.5 | -116.7664 | 32.83505 | normal        | gas                |
+|        0 |    0 | Alpine   | 865 | W    | 10.039699 |    162 |    140 | 24.24797 |      1 |             1 |             0 |             0 |      1 |        0 |       1 |           3 | 0.0000000 |    1 | 1.0000000 | 2583.934 | 3567.541 | 2071.475 |      8.74 |     1.73 |     1.59 |     0.88 |    2.54 |    0.48 |    3.04 |    3.25 |    0.49 |    3.75 |   1.03 |   2.49 | 0.41 | 1.98 |  65.82 | 55.05 | 41.23 | 12.18 | 24.73 |    2.48 |     10.28 |  2.39 |  3.52 |         5.5 | -116.7664 | 32.83505 | obese         | gas                |
+|        0 |    0 | Alpine   | 873 | W    |  9.804244 |    140 |    101 | 23.42301 |      0 |             0 |             0 |             0 |      0 |        0 |       0 |           3 | 0.0000000 |    1 | 0.0000000 | 2226.421 | 2406.020 | 2734.114 |      8.74 |     1.73 |     1.59 |     0.88 |    2.54 |    0.48 |    3.04 |    3.25 |    0.49 |    3.75 |   1.03 |   2.49 | 0.41 | 1.98 |  65.82 | 55.05 | 41.23 | 12.18 | 24.73 |    2.48 |     10.28 |  2.39 |  3.52 |         5.5 | -116.7664 | 32.83505 | overweight    | neither            |
+|        0 |    0 | Alpine   | 894 | W    |  9.295003 |    150 |     89 | 17.97980 |      0 |             0 |             0 |             0 |     NA |        1 |       1 |           2 | 0.0000000 |    1 | 1.0000000 | 2448.837 | 2763.787 | 3041.860 |      8.74 |     1.73 |     1.59 |     0.88 |    2.54 |    0.48 |    3.04 |    3.25 |    0.49 |    3.75 |   1.03 |   2.49 | 0.41 | 1.98 |  65.82 | 55.05 | 41.23 | 12.18 | 24.73 |    2.48 |     10.28 |  2.39 |  3.52 |         5.5 | -116.7664 | 32.83505 | normal        | gas                |
+
+``` r
+tail(dat) %>%
+    knitr::kable()
+```
+
+| hispanic | male | townname |  sid | race |   agepft |   height |   weight |      bmi | asthma | active_asthma | father_asthma | mother_asthma | wheeze | hayfever | allergy | educ_parent |     smoke | pets | gasstove |      fev |      fvc |     mmef | pm25_mass | pm25_so4 | pm25_no3 | pm25_nh4 | pm25_oc | pm25_ec | pm25_om | pm10_oc | pm10_ec | pm10_tc | formic | acetic |  hcl | hno3 | o3_max | o3106 | o3_24 |   no2 | pm10 | no_24hr | pm2_5\_fr | iacid | oacid | total_acids |       lon |      lat | obesity_level | smoke_gas_exposure |
+|---------:|-----:|:---------|-----:|:-----|---------:|---------:|---------:|---------:|-------:|--------------:|--------------:|--------------:|-------:|---------:|--------:|------------:|----------:|-----:|---------:|---------:|---------:|---------:|----------:|---------:|---------:|---------:|--------:|--------:|--------:|--------:|--------:|--------:|-------:|-------:|-----:|-----:|-------:|------:|------:|------:|-----:|--------:|----------:|------:|------:|------------:|----------:|---------:|:--------------|:-------------------|
+|        1 |    1 | Upland   | 1799 | O    | 9.897331 | 138.0000 | 75.00000 | 17.90113 |      0 |             0 |             0 |             0 |      0 |        0 |       0 |           3 | 0.0000000 |    0 |        1 | 2084.428 | 2368.851 | 2630.158 |     22.46 |     2.65 |     7.75 |     2.96 |    6.49 |    1.19 |    7.79 |    8.32 |    1.22 |    9.54 |   2.67 |   4.73 | 0.46 | 4.03 |  63.83 |  46.5 |  22.2 | 37.97 | 40.8 |   18.48 |     27.73 |  4.49 |   7.4 |       11.43 | -117.6484 | 34.09751 | normal        | gas                |
+|        1 |    1 | Upland   | 1816 | W    | 9.631759 | 134.0000 | 60.00000 | 15.18864 |      0 |             0 |             0 |             0 |      0 |        0 |       1 |           3 | 0.0000000 |    1 |        1 | 1783.168 | 2001.980 | 2126.733 |     22.46 |     2.65 |     7.75 |     2.96 |    6.49 |    1.19 |    7.79 |    8.32 |    1.22 |    9.54 |   2.67 |   4.73 | 0.46 | 4.03 |  63.83 |  46.5 |  22.2 | 37.97 | 40.8 |   18.48 |     27.73 |  4.49 |   7.4 |       11.43 | -117.6484 | 34.09751 | normal        | gas                |
+|        1 |    1 | Upland   | 1833 | W    | 9.453799 | 139.0000 | 73.00000 | 17.17397 |      0 |             0 |             0 |             0 |      1 |        0 |       0 |           5 | 0.0000000 |    0 |        1 | 2000.662 | 2255.960 | 2396.026 |     22.46 |     2.65 |     7.75 |     2.96 |    6.49 |    1.19 |    7.79 |    8.32 |    1.22 |    9.54 |   2.67 |   4.73 | 0.46 | 4.03 |  63.83 |  46.5 |  22.2 | 37.97 | 40.8 |   18.48 |     27.73 |  4.49 |   7.4 |       11.43 | -117.6484 | 34.09751 | normal        | gas                |
+|        1 |    1 | Upland   | 1839 | M    | 9.776865 | 141.0000 | 85.00000 | 19.43381 |      0 |             0 |             0 |             0 |     NA |        1 |       0 |           3 | 0.0000000 |    1 |        1 | 2279.402 | 2537.542 | 2641.196 |     22.46 |     2.65 |     7.75 |     2.96 |    6.49 |    1.19 |    7.79 |    8.32 |    1.22 |    9.54 |   2.67 |   4.73 | 0.46 | 4.03 |  63.83 |  46.5 |  22.2 | 37.97 | 40.8 |   18.48 |     27.73 |  4.49 |   7.4 |       11.43 | -117.6484 | 34.09751 | normal        | gas                |
+|        1 |    1 | Upland   | 1850 | O    | 9.338809 | 143.0000 | 86.00000 | 19.11629 |      0 |             0 |             0 |             0 |      1 |       NA |       1 |           3 | 0.1501976 |    1 |        1 | 2428.672 | 2653.055 | 3489.301 |     22.46 |     2.65 |     7.75 |     2.96 |    6.49 |    1.19 |    7.79 |    8.32 |    1.22 |    9.54 |   2.67 |   4.73 | 0.46 | 4.03 |  63.83 |  46.5 |  22.2 | 37.97 | 40.8 |   18.48 |     27.73 |  4.49 |   7.4 |       11.43 | -117.6484 | 34.09751 | normal        | gas                |
+|        1 |    1 | Upland   | 1862 | W    | 9.966942 | 138.5984 | 82.76707 | 19.41148 |      0 |             0 |             1 |             0 |      1 |        0 |       0 |           4 | 0.0000000 |    1 |        0 | 2120.266 |       NA |       NA |     22.46 |     2.65 |     7.75 |     2.96 |    6.49 |    1.19 |    7.79 |    8.32 |    1.22 |    9.54 |   2.67 |   4.73 | 0.46 | 4.03 |  63.83 |  46.5 |  22.2 | 37.97 | 40.8 |   18.48 |     27.73 |  4.49 |   7.4 |       11.43 | -117.6484 | 34.09751 | normal        | neither            |
+
+``` r
+str(dat)
+```
+
+    ## Classes 'data.table' and 'data.frame':   1200 obs. of  51 variables:
+    ##  $ hispanic          : int  0 0 0 0 0 0 0 0 0 0 ...
+    ##  $ male              : int  0 0 0 0 0 0 0 0 0 0 ...
+    ##  $ townname          : chr  "Alpine" "Alpine" "Alpine" "Alpine" ...
+    ##  $ sid               : int  835 840 860 865 873 894 901 905 906 909 ...
+    ##  $ race              : chr  "W" "W" "W" "W" ...
+    ##  $ agepft            : num  10.1 9.97 9.95 10.04 9.8 ...
+    ##  $ height            : num  143 146 142 162 140 150 132 142 126 141 ...
+    ##  $ weight            : num  69 78 64 140 101 89 67 94 57 68 ...
+    ##  $ bmi               : num  15.3 16.6 14.4 24.2 23.4 ...
+    ##  $ asthma            : num  0 0 0 1 0 0 0 1 0 0 ...
+    ##  $ active_asthma     : int  0 0 0 1 0 0 0 1 0 0 ...
+    ##  $ father_asthma     : int  0 0 0 0 0 0 0 0 0 0 ...
+    ##  $ mother_asthma     : int  0 0 0 0 0 0 0 1 1 0 ...
+    ##  $ wheeze            : int  0 0 0 1 0 NA NA 1 0 0 ...
+    ##  $ hayfever          : int  0 0 0 0 0 1 1 0 0 1 ...
+    ##  $ allergy           : int  1 0 0 1 0 1 0 0 0 1 ...
+    ##  $ educ_parent       : int  3 NA 2 3 3 2 2 3 3 3 ...
+    ##  $ smoke             : num  0 0.152 0 0 0 ...
+    ##  $ pets              : int  1 0 0 1 1 1 1 1 1 1 ...
+    ##  $ gasstove          : num  0 0.729 1 1 0 ...
+    ##  $ fev               : num  2529 2467 1760 2584 2226 ...
+    ##  $ fvc               : num  2826 2638 2194 3568 2406 ...
+    ##  $ mmef              : num  3407 3466 1696 2071 2734 ...
+    ##  $ pm25_mass         : num  8.74 8.74 8.74 8.74 8.74 8.74 8.74 8.74 8.74 8.74 ...
+    ##  $ pm25_so4          : num  1.73 1.73 1.73 1.73 1.73 1.73 1.73 1.73 1.73 1.73 ...
+    ##  $ pm25_no3          : num  1.59 1.59 1.59 1.59 1.59 1.59 1.59 1.59 1.59 1.59 ...
+    ##  $ pm25_nh4          : num  0.88 0.88 0.88 0.88 0.88 0.88 0.88 0.88 0.88 0.88 ...
+    ##  $ pm25_oc           : num  2.54 2.54 2.54 2.54 2.54 2.54 2.54 2.54 2.54 2.54 ...
+    ##  $ pm25_ec           : num  0.48 0.48 0.48 0.48 0.48 0.48 0.48 0.48 0.48 0.48 ...
+    ##  $ pm25_om           : num  3.04 3.04 3.04 3.04 3.04 3.04 3.04 3.04 3.04 3.04 ...
+    ##  $ pm10_oc           : num  3.25 3.25 3.25 3.25 3.25 3.25 3.25 3.25 3.25 3.25 ...
+    ##  $ pm10_ec           : num  0.49 0.49 0.49 0.49 0.49 0.49 0.49 0.49 0.49 0.49 ...
+    ##  $ pm10_tc           : num  3.75 3.75 3.75 3.75 3.75 3.75 3.75 3.75 3.75 3.75 ...
+    ##  $ formic            : num  1.03 1.03 1.03 1.03 1.03 1.03 1.03 1.03 1.03 1.03 ...
+    ##  $ acetic            : num  2.49 2.49 2.49 2.49 2.49 2.49 2.49 2.49 2.49 2.49 ...
+    ##  $ hcl               : num  0.41 0.41 0.41 0.41 0.41 0.41 0.41 0.41 0.41 0.41 ...
+    ##  $ hno3              : num  1.98 1.98 1.98 1.98 1.98 1.98 1.98 1.98 1.98 1.98 ...
+    ##  $ o3_max            : num  65.8 65.8 65.8 65.8 65.8 ...
+    ##  $ o3106             : num  55 55 55 55 55 ...
+    ##  $ o3_24             : num  41.2 41.2 41.2 41.2 41.2 ...
+    ##  $ no2               : num  12.2 12.2 12.2 12.2 12.2 ...
+    ##  $ pm10              : num  24.7 24.7 24.7 24.7 24.7 ...
+    ##  $ no_24hr           : num  2.48 2.48 2.48 2.48 2.48 2.48 2.48 2.48 2.48 2.48 ...
+    ##  $ pm2_5_fr          : num  10.3 10.3 10.3 10.3 10.3 ...
+    ##  $ iacid             : num  2.39 2.39 2.39 2.39 2.39 2.39 2.39 2.39 2.39 2.39 ...
+    ##  $ oacid             : num  3.52 3.52 3.52 3.52 3.52 3.52 3.52 3.52 3.52 3.52 ...
+    ##  $ total_acids       : num  5.5 5.5 5.5 5.5 5.5 5.5 5.5 5.5 5.5 5.5 ...
+    ##  $ lon               : num  -117 -117 -117 -117 -117 ...
+    ##  $ lat               : num  32.8 32.8 32.8 32.8 32.8 ...
+    ##  $ obesity_level     : chr  "normal" "normal" "normal" "obese" ...
+    ##  $ smoke_gas_exposure: chr  "neither" "gas" "gas" "gas" ...
+    ##  - attr(*, ".internal.selfref")=<externalptr>
+
+The variables appear to be stored in the correct data type.
+
+  
+Take closer look at key variables and calculate initial summary
+statistics.
+
+The key variables are fev, smoke and gas exposure, pm 2.5, and bmi.
+
+According to this article from NCBI:
+ <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2643211/>  
+the forced expiratory volume of an individual varies by age and gender.
+First, I need to know what the age range is for individuals in this data
+set.
+
+``` r
+summary(dat[, agepft])
+```
+
+    ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+    ##   8.961   9.632   9.907   9.923  10.155  12.731
+
+After verifying on
+<https://github.com/USCbiostats/data-science-data/blob/master/01_chs/chs_codebook.docx>
+that the age numbers are in fact in years, I looked back to the NCBI
+article to find what range of fev I should expect to see for individuals
+at ages 8 to 13. According to the plot in Figure 1, the median fev
+values found for individuals ages 8 to 13 ranged from below 1 liter to
+about 3 liters for females and 1 liter to 3.5 liters in males.
+
+``` r
+# according to the document describing the data, the fev is
+# recorded in ml.
+
+dat[, .(min = min(fev), median = median(fev), max = max(fev)),
+    by = male]
+```
+
+    ##    male       min   median      max
+    ## 1:    0  984.8485 1945.743 3179.798
+    ## 2:    1 1146.4494 2090.258 3323.684
+
+The stats for fev in males and females falls within the range that I
+would expect them to.
+
 ###### 1. Facet plot showing scatterplots with regression lines of BMI vs FEV by “townname”. 
 
 ``` r
@@ -306,31 +454,20 @@ slightly by region.
 ###### 2. Stacked histograms of FEV by BMI category and FEV by smoke/gas exposure. Use different color schemes than the ggplot default.
 
 ``` r
-require(gridExtra)
+ggplot(data = dat, mapping = aes(x = fev)) + geom_histogram(mapping = aes(fill = factor(obesity_level)),
+    bins = 70, position = "dodge", binwidth = 50) + scale_fill_manual(values = c("darkseagreen2",
+    "dodgerblue", "firebrick2", "gold1"))
 ```
 
-    ## Loading required package: gridExtra
-
-    ## 
-    ## Attaching package: 'gridExtra'
-
-    ## The following object is masked from 'package:dplyr':
-    ## 
-    ##     combine
+![](README_files/figure-gfm/histograms%20of%20fev%20by%20bmi-1.png)<!-- -->
 
 ``` r
-p1 <- ggplot(data = dat, mapping = aes(x = fev)) + geom_histogram(mapping = aes(fill = factor(obesity_level)),
-    bins = 70) + scale_fill_manual(values = c("darkseagreen2",
-    "lemonchiffon2", "lightsalmon1", "gold1"))
-
-p2 <- ggplot(data = dat, mapping = aes(x = fev)) + geom_histogram(mapping = aes(fill = factor(smoke_gas_exposure)),
-    bins = 70) + scale_fill_manual(values = c("dodgerblue4",
-    "lightpink", "cadetblue1", "darkorange1"))
-
-grid.arrange(p1, p2, ncol = 1)
+ggplot(data = dat, mapping = aes(x = fev)) + geom_histogram(mapping = aes(fill = factor(smoke_gas_exposure)),
+    bins = 70, position = "dodge", binwidth = 50) + scale_fill_manual(values = c("dodgerblue4",
+    "lightpink", "cadetblue1", "yellow1"))
 ```
 
-![](README_files/figure-gfm/histograms%20of%20fev%20by%20bmi%20and%20smoke/gas-1.png)<!-- -->  
+![](README_files/figure-gfm/histogram%20of%20fev%20by%20smoke/gas-1.png)<!-- -->  
 Of the two histograms above, the one on top reveals that most people in
 the data set fall under the normal obesity level category, and that the
 average forced expiratory volume (fev) for people in this category lies
