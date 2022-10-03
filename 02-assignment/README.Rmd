@@ -47,20 +47,25 @@ regional <- fread("regional.csv")
 
 ```
 
-######  1. After merging the data, make sure you don’t have any duplicates by counting the number of rows. Make sure it matches.\
+#####  1. After merging the data, make sure you don’t have any duplicates by counting the number of rows. Make sure it matches.\
 In the case of missing values, impute data using the average within the variables “male” and “hispanic.” If you are interested (and feel adventurous) in the theme of Data Imputation, take a look at this paper on “Multiple Imputation” using the Amelia R package here.\
   
 Merge data tables and ensure dimensions are correct.
-```{r merging data}
-#Check rows
-dim(individual) #merged data table should contain 1200 rows
-dim(regional) #merged data table should have 23 + 27 - 1 columns
+```{r check dimnesions of the two data sets}
+#Check rows and columns
+dim(individual)
+dim(regional) 
+```
+The merged data set should contain 1200 observations and 23 + 27 - 1 variables.
 
+```{r merge data}
 dat <- merge(x = individual, y = regional, by.x = "townname", by.y = "townname")
 
 #Check dimensions
-dim(dat) #1200 rows and 49 columns as expected
+dim(dat) 
 ```
+Merged data set has 1200 rows and 49 columns as expected.
+
 
 Impute missing values with averages within variables "male" and "hispanic"
 ```{r view missing data}
@@ -76,14 +81,14 @@ out_names <- paste0(in_names, "_avg") #suffix for "out_names" will be _avg
 
 dat <- merge(
   
-  #group by variables "hispanic" and "male", then compute the mean of in_names for each group and assign to temporary variable x
+  #group by variables "hispanic" and "male", then compute the mean of in_names for each group and assign to temporary table x
   x = dat[,
   setNames(lapply(.SD, mean, na.rm = TRUE), out_names),
   .SDcols = in_names, 
   by  = .(hispanic, male)
   ],
   
-  #merge temporary variable x back with main data table to add new columns containing averages
+  #merge temporary table x back with main data table to add new columns containing averages
   y = dat,
   by.x = c("hispanic", "male"),
   by.y = c("hispanic", "male")
@@ -117,8 +122,9 @@ dat[,
 sum(is.na(dat[, ..in_names]))
 
 ```
+The NA values have been successfully imputed.
 
-###### 2. Create a new categorical variable named “obesity_level” using the BMI measurement (underweight BMI<14; normal BMI 14-22; overweight BMI 22-24; obese BMI>24). To make sure the variable is rightly coded, create a summary table that contains the minimum BMI, maximum BMI, and the total number of observations per category.
+##### 2. Create a new categorical variable named “obesity_level” using the BMI measurement (underweight BMI<14; normal BMI 14-22; overweight BMI 22-24; obese BMI>24). To make sure the variable is rightly coded, create a summary table that contains the minimum BMI, maximum BMI, and the total number of observations per category.
 
 
 ```{r create obesity_level category}
@@ -134,19 +140,19 @@ dat[,
 
 Create summary table to verify new column.
 ```{r summary table of new column}
-dat[, .(min_bmi = min(bmi), max_bmi = max(bmi)), by = obesity_level][order(min_bmi)] %>%
+dat[, .(min_bmi = min(bmi), max_bmi = max(bmi), num_observations = .N), by = obesity_level][order(min_bmi)] %>%
   knitr::kable()
 ```
 The bmi variables have been categorized as intended.
 
 
-###### 3. Create another categorical variable named “smoke_gas_exposure” that summarizes “Second Hand Smoke” and “Gas Stove.” The variable should have four categories in total.
+##### 3. Create another categorical variable named “smoke_gas_exposure” that summarizes “Second Hand Smoke” and “Gas Stove.” The variable should have four categories in total.
 
-As some values will have been imputed with averages, I will view the variables
+Since the values for smoke and gasstove are both binary, but some of the values will have been imputed with averages, I will consider how to categorize the imputed values.
 ```{r consider imputed values}
 dat[(smoke %between% c(0.001,0.999)) & (gasstove %between% c(0.001,0.999)), .(smoke, gasstove)]
 ```
-It appears that the imputed average for smoke exposure is closer to 0, and the imputed average for gas exposure is closer to 1. When creating the smoke and gas exposure category, those that have smoke exposure = 1 will qualify. As for the gas exposure, those that have gasstove != 0 will qualify. Essentially, I will be rounding the smoke exposure values up to 1 and the gasstove exposure values down to 0.
+It appears that the imputed average for smoke exposure is closer to 0, and the imputed average for gas exposure is closer to 1. When creating the smoke and gas exposure category, those that have smoke exposure = 1 will qualify. As for the gas exposure, those that have gasstove != 0 will qualify. Essentially, I will be rounding the imputed smoke exposure values up to 1 and the imputed gasstove exposure values down to 0.
 
 ```{r create smoke/gas category}
 dat[,
@@ -156,7 +162,7 @@ dat[,
 ```
 
 
-###### 4. Create four summary tables showing the average (or proportion, if binary) and sd of “Forced expiratory volume in 1 second (ml)” and asthma indicator by town, sex, obesity level, and “smoke_gas_exposure.”
+##### 4. Create four summary tables showing the average (or proportion, if binary) and sd of “Forced expiratory volume in 1 second (ml)” and asthma indicator by town, sex, obesity level, and “smoke_gas_exposure.”
 
 ```{r four summary tables}
 
@@ -225,9 +231,18 @@ dat[, .(min = min(fev), median = median(fev), max = max(fev)), by = male]
 ```
 The stats for fev in males and females falls within the range that I would expect them to.
 
+```{r check pm 25}
+summary(dat[, pm25_mass])
+```
+There are no missing or implausible values in the PM 2.5 column.
+
+```{r check bmi}
+summary(dat[, bmi])
+```
+No missing or implausible values for bmi column. The values are within the range that the CDC provides for bmi measurements in children: https://www.cdc.gov/healthyweight/assessing/bmi/childrens_bmi/about_childrens_bmi.html
 
 
-######  1. Facet plot showing scatterplots with regression lines of BMI vs FEV by “townname”.\
+#####  1. Facet plot showing scatterplots with regression lines of BMI vs FEV by “townname”.\
 
 ```{r facet plot of bmi vs fev}
 ggplot(dat, aes(bmi, fev, color = townname)) +
@@ -238,26 +253,30 @@ ggplot(dat, aes(bmi, fev, color = townname)) +
 \
 The plots above show that forced expiratory volume and body mass index are positively correlated in each of the towns in the data set. Additionally, towns such as Alpine and Riverside have a relatively low positive slope, whereas towns such as San Dimas, Lake Elsinore, and Upland have steeper positive slopes. This suggests that the positive correlation between body mass index and forced expiratory volume varies slightly by region.
 
-######   2. Stacked histograms of FEV by BMI category and FEV by smoke/gas exposure. Use different color schemes than the ggplot default.
+#####   2. Stacked histograms of FEV by BMI category and FEV by smoke/gas exposure. Use different color schemes than the ggplot default.
 
 ```{r histograms of fev by bmi}
 
 ggplot(data = dat, mapping = aes(x = fev)) +
-  geom_histogram(mapping = aes(fill = factor(obesity_level)), bins = 70, position = "dodge", binwidth = 50) +
-  scale_fill_manual(values = c("darkseagreen2", "dodgerblue", "firebrick2", "gold1"))
+  geom_histogram(mapping = aes(fill = factor(obesity_level)), bins = 70, alpha = 0.8) +
+  scale_fill_manual(values = c("darkseagreen2", "dodgerblue", "firebrick2", "gold1")) +
+  guides(fill = guide_legend(title = "Obesity Category"))
 ```
+\
+The plot above reveals that most people in the data set fall under the normal obesity level category, and that the average forced expiratory volume (fev) for people in this category lies at about 2000 with a normal distribution. As for people in the underweight category, the average fev is lower than that of those in the normal category, at about 1750. For people in both the overweight and obese categories, the average fev lies about at 2300, which is higher than the average for the people in the normal category.
+
 
 ```{r histogram of fev by smoke/gas}
 ggplot(data = dat, mapping = aes(x = fev)) +
-  geom_histogram(mapping = aes(fill = factor(smoke_gas_exposure)), bins = 70, position = "dodge", binwidth = 50) +
-  scale_fill_manual(values = c("dodgerblue4", "lightpink", "cadetblue1", "yellow1"))
+  geom_histogram(mapping = aes(fill = factor(smoke_gas_exposure)), bins = 70, alpha = 0.8) +
+  scale_fill_manual(values = c("dodgerblue4", "lightpink", "cadetblue1", "yellow1")) +
+  guides(fill = guide_legend(title = "Obesity Category"))
 
 ```
 \
-Of the two histograms above, the one on top reveals that most people in the data set fall under the normal obesity level category, and that the average forced expiratory volume (fev) for people in this category lies at about 2000 with a normal distribution. As for people in the underweight category, the average fev is lower than that of those in the normal category, at about 1750. For people in both the overweight and obese categories, the average fev lies about at 2300, which is higher than the average for the people in the normal category.\
-The histogram on the bottom reveals that most people in the data set are classified as either having exposure to both gas and smoke, or gas only. Additionally, all of the categories have an average fev of about 2000, with a standard deviation of about 300. 
+The plot above reveals that most people in the data set are classified as either having exposure to both gas and smoke, or gas only. Additionally, the fev for each of the obesity categories are centered around 2050, with a standard deviation of about 300. 
 
-######  3. Barchart of BMI by smoke/gas exposure. \
+#####  3. Barchart of BMI by smoke/gas exposure. 
 ```{r bmi vs smoke/gas barchart}
 ggplot(data = dat, mapping = aes(x = obesity_level, fill = factor(smoke_gas_exposure))) +
   geom_bar(position = "dodge") +
@@ -266,15 +285,15 @@ ggplot(data = dat, mapping = aes(x = obesity_level, fill = factor(smoke_gas_expo
 \
 From this bar chart of bmi category counts by obesity level, it is evident that the proportions of people that are exposed to gas, smoke, both, or neither are mostly consistent across the bmi categories. The highest proportion of people in each category have some exposure to gas, and the smallest proportion of people have some exposure to smoke. For the other types of exposure (both or neither), the proportion of people in those categories sits at about one third of that of the proportion of people exposed to gas only.
 
-######  4. Statistical summary graphs of FEV by BMI and FEV by smoke/gas exposure category.\
-```{r plot stat summary of fev by bmi}
-ggplot(data = dat, mapping = aes(x = fev, y = bmi, col = obesity_level)) +
-  geom_jitter() +
-  geom_smooth(formula = y ~ x, method = "lm", se = FALSE, size = 0.75) +
-  geom_smooth(mapping = aes(x = fev, y= bmi), col = "black", method = "lm", formula = y ~ x, se = FALSE, size = 0.75, linetype = "twodash")
+#####  4. Statistical summary graphs of FEV by BMI and FEV by smoke/gas exposure category.
+```{r plot stat summary of fev by obesity category}
+ggplot(data = dat, mapping = aes(x = forcats::fct_reorder(factor(obesity_level), fev, median), y = fev, color = obesity_level)) +
+  stat_summary(fun.min = min, fun.max = max, fun = median) +
+  xlab("Obesity Category")
 ```
 \
-The above plot reveals that there is a positive correlation between increase in bmi and increase in forced expiratory volume, as shown in the dashed black regression line drawn through the points. Furthermore, within each of the obesity level categories, there seems to be the steepest positive correlation slope for the relationship between bmi and fev for those in the normal obesity level category, followed by obese, then underweight, and finally overweight.
+The above plot reveals that there is a positive correlation between increase in bmi and increase in forced expiratory volume. The median fev for those that are underweight is about 1700, and increases to 1950 for those that are normal, and up to 2200 and 2250 for those that are overweight and obese, respectively. Additionally, the range of values for the normal and obese categories are larger than the underweight and overweight categories.
+
 
 ```{r plot stat summary of fev by smoke/gas exposure}
 
@@ -282,9 +301,9 @@ ggplot(data = dat, mapping = aes(y = fev, x = smoke_gas_exposure, color = smoke_
   stat_summary(fun.min = min, fun.max = max, fun = median)
 ```
 \
-The stat summary above reveals that when looking at fev by smoke and gas exposure, there the median fev for the groups all lie at 2000. The groups having no exposure to smoke or gas, as well as the group exposed to smoke only, have medians slightly higher than the other two groups. Additionally, the range of observations for the groups exposed to neither smoke nor gas, and gas only, are greater than for the other two groups.
+The stat summary above reveals that when looking at fev by smoke and gas exposure, the median fev for the groups all lie at approximately 2000. The groups having no exposure to smoke or gas, as well as the group exposed to smoke only, have medians slightly higher than the other two groups. Additionally, the range of observations for the groups exposed to neither smoke nor gas, and gas only, are greater than for the other two groups.
 
-######  5. A leaflet map showing the concentrations of PM2.5 mass in each of the CHS communities.\
+#####  5. A leaflet map showing the concentrations of PM2.5 mass in each of the CHS communities.\
 ```{r plot leaflet map, warning=FALSE}
 qpal <- colorQuantile("YlOrRd", dat[, pm25_mass], n = 12)
 
@@ -294,12 +313,12 @@ qpal_labs <- unique(sort(dat[, pm25_mass]))
 leaflet(dat) %>%
   addProviderTiles(providers$CartoDB.Positron) %>%
   addCircles(lat = ~lat, lng = ~lon, color = ~qpal(pm25_mass), radius = 400, fillOpacity = 1) %>%
-  addLegend(colors = qpal_colors, labels = qpal_labs, title = "conc. of PM 2.5 mass", position = "topright", opacity = 0.5)
+  addLegend(colors = qpal_colors, labels = qpal_labs, title = "conc. of PM 2.5 mass", opacity = 0.5)
 ```
 \
 The leaflet plot above reveals that higher concentration levels of pm 2.5 are associated with large, urban population centers, in this case around the greater Los Angeles area. Only in areas such as Santa Barbara or San Luis Obispo that are further from large population centers and closer to the coastline are low concentration levels of pm 2.5 of below 8 observed.
 
-######  6. Choose a visualization to examine whether PM2.5 mass is associated with FEV.\
+#####  6. Choose a visualization to examine whether PM2.5 mass is associated with FEV.\
 ```{r pm25 mass and fev association grouped boxplots}
 ggplot(data = dat, mapping = aes(y = fev, x = pm25_mass, group = factor(pm25_mass))) +
   geom_boxplot(width = 0.5) +
