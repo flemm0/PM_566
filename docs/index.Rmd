@@ -5,14 +5,10 @@ date: "`r Sys.Date()`"
 output: html_document
 ---
 
-
 ```{r setup, include = FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-```{r load libraries}
-library(rvest)
-```
 
 # Learning goals:
 * Use a real world API to make queries and process the data
@@ -23,6 +19,11 @@ library(rvest)
 In this lab, we will be working with the NCBI API to make queries and extract information using XML and regular expressions. For this lab, we will be using the httr, xml2, and stringr R packages.
 
 This markdown document should be rendered using github_document document.
+
+```{r load libraries}
+library(rvest)
+library(stringr)
+```
 
 ## Question 1: How many Sars-CoV-2 papers?
 Build an automatic counter of sars-cov-2 papers using PubMed. You will need to apply XPath as we did during the lecture to extract the number of results returned by PubMed in the following web address:
@@ -39,9 +40,9 @@ counts <- xml2::xml_find_first(website, "/html/body/main/div[9]/div[2]/section[1
 
 counts <- as.character(counts)
 
-counts
+#counts
 
-stringr::str_extract(counts, "([0-9]{3},)+[0-9]{3}")
+stringr::str_extract(counts, "[0-9,]+")
 ```
 
 
@@ -51,24 +52,47 @@ You need to query the following The parameters passed to the query are documente
 
 Use the function `httr::GET()` to make the following query:
 
-1. Baseline URL: https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi
+1. Baseline URL: `https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi`
 
 2. Query parameters:
   * db: pubmed
   * term: covid19 hawaii
   * retmax: 1000
   
+  
+```{r query academic publications on covid 19 and hawaii}
+library(httr)
+query_ids <- GET(
+  url = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi",
+  query = list(
+    term = "covid19 hawaii",
+    retmax = 1000)
+)
+
+# Extracting the content of the response of GET
+ids <- httr::content(query_ids)
+
+```
+
+  
 
 ## Question 3: Get details about the articles
 The Ids are wrapped around text in the following way: <Id>... id number ...</Id>. we can use a regular expression that extract that information. Fill out the following lines of code:
 
-```{r}
+```{r get details about articles}
+# Turn the result into a character vector
+ids <- as.character(ids)
 
+# Find all the ids 
+ids <- stringr::str_extract_all(ids, "<Id>[0-9]*</Id>")[[1]]
+
+# Remove all the leading and trailing <Id> </Id>. Make use of "|"
+ids <- stringr::str_remove_all(ids, "<Id>|</Id")
 ```
 
 With the ids in hand, we can now try to get the abstracts of the papers. As before, we will need to coerce the contents (results) to a list using:
 
-1. Baseline url: https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi
+1. Baseline url: `https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi`
 
 2. Query parameters:
 
@@ -80,7 +104,19 @@ With the ids in hand, we can now try to get the abstracts of the papers. As befo
 Pro-tip: If you want GET() to take some element literal, wrap it around I() (as you would do in a formula in R). For example, the text "123,456" is replaced with "123%2C456". If you don’t want that behavior, you would need to do the following I("123,456").
 
 ```{r}
+publications <- GET(
+  url   = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi",
+  query = list(
+    db = "pubmed",
+    id = str_c(ids, collapse = ","),
+    retmax = 1000,
+    rettype = "abstract"
+    )
+)
 
+# Turning the output into character vector
+publications <- httr::content(publications)
+publications_txt <- as.character(publications)
 ```
 With this in hand, we can now analyze the data. This is also a good time for committing and pushing your work!
 
@@ -131,7 +167,3 @@ Finally, put everything together into a single data.frame and use knitr::kable()
 ```
 
 Knit the document, commit, and push.
-
-
-
-

@@ -371,7 +371,6 @@ Expressions</h1>
 </div>
 
 
-<pre class="r"><code>library(rvest)</code></pre>
 <div id="learning-goals" class="section level1">
 <h1>Learning goals:</h1>
 <ul>
@@ -387,6 +386,8 @@ extract information using XML and regular expressions. For this lab, we
 will be using the httr, xml2, and stringr R packages.</p>
 <p>This markdown document should be rendered using github_document
 document.</p>
+<pre class="r"><code>library(rvest)
+library(stringr)</code></pre>
 <div id="question-1-how-many-sars-cov-2-papers" class="section level2">
 <h2>Question 1: How many Sars-CoV-2 papers?</h2>
 <p>Build an automatic counter of sars-cov-2 papers using PubMed. You
@@ -403,9 +404,9 @@ counts &lt;- xml2::xml_find_first(website, &quot;/html/body/main/div[9]/div[2]/s
 
 counts &lt;- as.character(counts)
 
-counts</code></pre>
-<pre><code>## [1] &quot;&lt;div class=\&quot;results-amount\&quot;&gt;\n  \n    &lt;span class=\&quot;value\&quot;&gt;179,021&lt;/span&gt;\n    results\n  \n&lt;/div&gt;&quot;</code></pre>
-<pre class="r"><code>stringr::str_extract(counts, &quot;([0-9]{3},)+[0-9]{3}&quot;)</code></pre>
+#counts
+
+stringr::str_extract(counts, &quot;[0-9,]+&quot;)</code></pre>
 <pre><code>## [1] &quot;179,021&quot;</code></pre>
 </div>
 <div id="question-2-academic-publications-on-covid-19-and-hawaii" class="section level2">
@@ -415,7 +416,8 @@ are documented here.</p>
 <p>Use the function <code>httr::GET()</code> to make the following
 query:</p>
 <ol style="list-style-type: decimal">
-<li><p>Baseline URL: <a href="https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi" class="uri">https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi</a></p></li>
+<li><p>Baseline URL:
+<code>https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi</code></p></li>
 <li><p>Query parameters:</p></li>
 </ol>
 <ul>
@@ -423,17 +425,36 @@ query:</p>
 <li>term: covid19 hawaii</li>
 <li>retmax: 1000</li>
 </ul>
+<pre class="r"><code>library(httr)
+query_ids &lt;- GET(
+  url = &quot;https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi&quot;,
+  query = list(
+    term = &quot;covid19 hawaii&quot;,
+    retmax = 1000)
+)
+
+# Extracting the content of the response of GET
+ids &lt;- httr::content(query_ids)</code></pre>
 </div>
 <div id="question-3-get-details-about-the-articles" class="section level2">
 <h2>Question 3: Get details about the articles</h2>
 <p>The Ids are wrapped around text in the following way: <Id>… id number
 …</Id>. we can use a regular expression that extract that information.
 Fill out the following lines of code:</p>
+<pre class="r"><code># Turn the result into a character vector
+ids &lt;- as.character(ids)
+
+# Find all the ids 
+ids &lt;- stringr::str_extract_all(ids, &quot;&lt;Id&gt;[0-9]*&lt;/Id&gt;&quot;)[[1]]
+
+# Remove all the leading and trailing &lt;Id&gt; &lt;/Id&gt;. Make use of &quot;|&quot;
+ids &lt;- stringr::str_remove_all(ids, &quot;&lt;Id&gt;|&lt;/Id&quot;)</code></pre>
 <p>With the ids in hand, we can now try to get the abstracts of the
 papers. As before, we will need to coerce the contents (results) to a
 list using:</p>
 <ol style="list-style-type: decimal">
-<li><p>Baseline url: <a href="https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi" class="uri">https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi</a></p></li>
+<li><p>Baseline url:
+<code>https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi</code></p></li>
 <li><p>Query parameters:</p></li>
 </ol>
 <ul>
@@ -447,6 +468,19 @@ list using:</p>
 around I() (as you would do in a formula in R). For example, the text
 “123,456” is replaced with “123%2C456”. If you don’t want that behavior,
 you would need to do the following I(“123,456”).</p>
+<pre class="r"><code>publications &lt;- GET(
+  url   = &quot;https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi&quot;,
+  query = list(
+    db = &quot;pubmed&quot;,
+    id = str_c(ids, collapse = &quot;,&quot;),
+    retmax = 1000,
+    rettype = &quot;abstract&quot;
+    )
+)
+
+# Turning the output into character vector
+publications &lt;- httr::content(publications)
+publications_txt &lt;- as.character(publications)</code></pre>
 <p>With this in hand, we can now analyze the data. This is also a good
 time for committing and pushing your work!</p>
 </div>
