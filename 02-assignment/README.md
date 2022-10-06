@@ -1,7 +1,7 @@
 Assignment 02: Data Viz and Wrangling
 ================
 Flemming Wu
-2022-10-05
+2022-10-06
 
 For this assignment, we will be analyzing data from USC’s Children’s
 Health Study. The learning objectives are to conduct data wrangling and
@@ -86,17 +86,14 @@ Impute missing values with averages within variables “male” and
 
 ``` r
 # look at which columns have NA count greater than 0
-which(colSums(is.na(dat)) > 0)
+names(which(colSums(is.na(dat)) > 0))
 ```
 
-    ##        agepft        height        weight           bmi        asthma 
-    ##             6             7             8             9            10 
-    ## father_asthma mother_asthma        wheeze      hayfever       allergy 
-    ##            12            13            14            15            16 
-    ##   educ_parent         smoke      gasstove           fev           fvc 
-    ##            17            18            20            21            22 
-    ##          mmef       no_24hr      pm2_5_fr 
-    ##            23            43            44
+    ##  [1] "agepft"        "height"        "weight"        "bmi"          
+    ##  [5] "asthma"        "father_asthma" "mother_asthma" "wheeze"       
+    ##  [9] "hayfever"      "allergy"       "educ_parent"   "smoke"        
+    ## [13] "gasstove"      "fev"           "fvc"           "mmef"         
+    ## [17] "no_24hr"       "pm2_5_fr"
 
 ``` r
 # select most important columns to impute NAs and assign to
@@ -431,11 +428,8 @@ str(dat)
 
 The variables appear to be stored in the correct data type.
 
-  
-Take closer look at key variables and calculate initial summary
-statistics.
-
-The key variables are fev, smoke and gas exposure, pm 2.5, and bmi.
+Take closer look at key variables (fev, smoke and gas exposure, pm 2.5,
+and bmi) and calculate initial summary statistics.
 
 According to this article from NCBI:
  <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2643211/>  
@@ -545,7 +539,7 @@ around 2050, with a standard deviation of about 300.
 ``` r
 ggplot(data = dat, mapping = aes(x = obesity_level, fill = factor(smoke_gas_exposure))) +
     geom_bar(position = "dodge") + scale_fill_manual(values = c("dodgerblue4",
-    "lightpink", "cadetblue1", "darkorange1"))
+    "lightpink", "cadetblue1", "darkorange1")) + labs(fill = "Smoke and Gas Exposure")
 ```
 
 ![](README_files/figure-gfm/bmi%20vs%20smoke/gas%20barchart-1.png)<!-- -->  
