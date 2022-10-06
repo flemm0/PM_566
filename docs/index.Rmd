@@ -87,7 +87,7 @@ ids <- as.character(ids)
 ids <- stringr::str_extract_all(ids, "<Id>[0-9]*</Id>")[[1]]
 
 # Remove all the leading and trailing <Id> </Id>. Make use of "|"
-ids <- stringr::str_remove_all(ids, "<Id>|</Id")
+ids <- stringr::str_remove_all(ids, "<Id>|</Id>")
 ```
 
 With the ids in hand, we can now try to get the abstracts of the papers. As before, we will need to coerce the contents (results) to a list using:
@@ -132,6 +132,15 @@ Write a regular expression that captures all such instances
 
 ```{r}
 
+institution <- str_extract_all(
+  publications_txt, 
+  "University of ([A-Z][a-zA-Z]+)+|[A-Z][a-z]* Institute of ([A-Z][a-zA-Z]+)+")
+
+institution <- unlist(institution)
+table(institution)
+
+
+
 ```
 
 Repeat the exercise and this time focus on schools and departments in the form of
@@ -141,6 +150,11 @@ Repeat the exercise and this time focus on schools and departments in the form o
 
 And tabulate the results
 ```{r}
+schools_and_deps <- str_extract_all(
+  publications_txt,
+  "School of ([A-Z][a-zA-Z]+)+|[A-Z][a-z]* Department of ([A-Z][a-zA-Z]+)+"
+  )
+table(schools_and_deps)
 
 ```
 
@@ -152,18 +166,30 @@ We want to build a dataset which includes the title and the abstract of the pape
 Before applying the functions to extract text directly, it will help to process the XML a bit. We will use the xml2::xml_children() function to keep one element per id. This way, if a paper is missing the abstract, or something else, we will be able to properly match PUBMED IDS with their corresponding records.
 
 ```{r}
-
-
+pub_char_list <- xml2::xml_children(publications)
+pub_char_list <- sapply(pub_char_list, as.character)
 ```
 
 Now, extract the abstract and article title for each one of the elements of pub_char_list. You can either use sapply() as we just did, or simply take advantage of vectorization of stringr::str_extract
 ```{r}
+abstracts <- str_extract(pub_char_list, "<AbstractText>.*</AbstractText>")
+abstracts <- str_replace_all(abstracts, "</?[[:alpha:]]+>", "")
 
+titles <- str_extract(pub_char_list, "<ArticleTitle>.*</ArticleTitle>")
+titles <- str_replace_all(titles, "</?[[:alpha:]]+>", "")
 ```
 
 Finally, put everything together into a single data.frame and use knitr::kable() to print the results
 ```{r}
+database <- data.frame(
+  PubMedId = ids,
+  Title    = titles,
+  Abstract = abstracts
+) 
 
+database %>%
+  head(n = 10) %>%
+  knitr::kable()
 ```
 
 Knit the document, commit, and push.
