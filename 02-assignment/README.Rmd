@@ -73,10 +73,25 @@ Impute missing values with averages within variables "male" and "hispanic"
 which(colSums(is.na(dat)) > 0)
 ```
 
-```{r impute nas with means of each group}
+
+```{r select columns to impute}
 
 #select most important columns to impute NAs and assign to "in_names"
 in_names  <- c("agepft", "height", "weight", "bmi", "smoke", "asthma", "gasstove", "fev")
+
+#print how many values will be imputed
+sum(is.na(dat[, ..in_names]))
+
+```
+There are 555 values out of 58800 that will be imputed, which is approximately 0.94% of the data
+
+```{r view averages to impute}
+dat[, lapply(.SD, mean, na.rm = TRUE), .SDcols = in_names, by = .(hispanic, male)] %>%
+  knitr::kable()
+```
+The above table shows what values are to be used to impute NAs in each column. I will first have to merge these columns in order to add them to the original data table.
+
+```{r impute nas with means of each group}
 out_names <- paste0(in_names, "_avg") #suffix for "out_names" will be _avg
 
 dat <- merge(
@@ -167,19 +182,19 @@ dat[,
 ```{r four summary tables}
 
 #fev and asthma by town name
-dat[, .(avg_fev = mean(fev), std_fev = sd(fev), prop_asthma = mean(asthma), asthma_std = sd(asthma)), by = townname] %>%
+dat[, .(avg_fev = mean(fev), std_fev = sd(fev), prop_asthma = mean(asthma)), by = townname] %>%
   knitr::kable()
 
 #fev and asthma by sex
-dat[, .(avg_fev = mean(fev), std_fev = sd(fev), prop_asthma = mean(asthma), asthma_std = sd(asthma)), by = male] %>%
+dat[, .(avg_fev = mean(fev), std_fev = sd(fev), prop_asthma = mean(asthma)), by = male] %>%
   knitr::kable()
 
 #fev and asthma by obesity level
-dat[, .(avg_fev = mean(fev), std_fev = sd(fev), prop_asthma = mean(asthma), asthma_std = sd(asthma)), by = obesity_level] %>%
+dat[, .(avg_fev = mean(fev), std_fev = sd(fev), prop_asthma = mean(asthma)), by = obesity_level] %>%
   knitr::kable()
 
 #fev and asthma by smoke and gas exposure
-dat[, .(avg_fev = mean(fev), std_fev = sd(fev), prop_asthma = mean(asthma), asthma_std = sd(asthma)), by = smoke_gas_exposure] %>%
+dat[, .(avg_fev = mean(fev), std_fev = sd(fev), prop_asthma = mean(asthma)), by = smoke_gas_exposure] %>%
   knitr::kable()
 ```
 

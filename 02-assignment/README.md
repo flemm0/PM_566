@@ -1,7 +1,7 @@
 Assignment 02: Data Viz and Wrangling
 ================
 Flemming Wu
-2022-10-03
+2022-10-05
 
 For this assignment, we will be analyzing data from USC’s Children’s
 Health Study. The learning objectives are to conduct data wrangling and
@@ -99,8 +99,38 @@ which(colSums(is.na(dat)) > 0)
     ##            23            43            44
 
 ``` r
-#select most important columns to impute NAs and assign to "in_names"
-in_names  <- c("agepft", "height", "weight", "bmi", "smoke", "asthma", "gasstove", "fev")
+# select most important columns to impute NAs and assign to
+# 'in_names'
+in_names <- c("agepft", "height", "weight", "bmi", "smoke", "asthma",
+    "gasstove", "fev")
+
+# print how many values will be imputed
+sum(is.na(dat[, ..in_names]))
+```
+
+    ## [1] 555
+
+There are 555 values out of 58800 that will be imputed, which is
+approximately 0.94% of the data
+
+``` r
+dat[, lapply(.SD, mean, na.rm = TRUE), .SDcols = in_names, by = .(hispanic,
+    male)] %>%
+    knitr::kable()
+```
+
+| hispanic | male |   agepft |   height |   weight |      bmi |     smoke |    asthma |  gasstove |      fev |
+|---------:|-----:|---------:|---------:|---------:|---------:|----------:|----------:|----------:|---------:|
+|        0 |    0 | 9.849789 | 138.9720 | 77.39564 | 18.05281 | 0.1522989 | 0.1239193 | 0.7291066 | 1945.743 |
+|        1 |    0 | 9.907300 | 138.1941 | 79.04641 | 18.63201 | 0.1535270 | 0.1164659 | 0.8218623 | 1977.241 |
+|        1 |    1 | 9.966942 | 138.5984 | 82.76707 | 19.41148 | 0.1501976 | 0.1601562 | 0.8156863 | 2120.266 |
+|        0 |    1 | 9.979124 | 139.8388 | 78.78289 | 18.14035 | 0.1949686 | 0.1829653 | 0.7798742 | 2090.258 |
+
+The above table shows what values are to be used to impute NAs in each
+column. I will first have to merge these columns in order to add them to
+the original data table.
+
+``` r
 out_names <- paste0(in_names, "_avg") #suffix for "out_names" will be _avg
 
 dat <- merge(
@@ -228,65 +258,65 @@ dat[, `:=`(smoke_gas_exposure, fifelse(smoke == 1 & gasstove !=
 
 ``` r
 # fev and asthma by town name
-dat[, .(avg_fev = mean(fev), std_fev = sd(fev), prop_asthma = mean(asthma),
-    asthma_std = sd(asthma)), by = townname] %>%
+dat[, .(avg_fev = mean(fev), std_fev = sd(fev), prop_asthma = mean(asthma)),
+    by = townname] %>%
     knitr::kable()
 ```
 
-| townname      |  avg_fev |  std_fev | prop_asthma | asthma_std |
-|:--------------|---------:|---------:|------------:|-----------:|
-| Alpine        | 2087.101 | 291.1768 |   0.1144423 |  0.3139348 |
-| Atascadero    | 2075.897 | 324.0935 |   0.2528408 |  0.4340107 |
-| Lake Elsinore | 2038.849 | 303.6956 |   0.1274366 |  0.3255095 |
-| Lake Gregory  | 2084.700 | 319.9593 |   0.1512392 |  0.3585609 |
-| Lancaster     | 2003.044 | 317.1298 |   0.1640054 |  0.3674206 |
-| Lompoc        | 2034.354 | 351.0454 |   0.1142335 |  0.3139431 |
-| Long Beach    | 1985.861 | 319.4625 |   0.1359886 |  0.3370219 |
-| Mira Loma     | 1985.202 | 324.9634 |   0.1582359 |  0.3572088 |
-| Riverside     | 1989.881 | 277.5065 |   0.1100000 |  0.3144660 |
-| San Dimas     | 2026.794 | 318.7845 |   0.1712392 |  0.3771647 |
-| Santa Maria   | 2025.750 | 312.1725 |   0.1348240 |  0.3372912 |
-| Upland        | 2024.266 | 343.1637 |   0.1212392 |  0.3263737 |
+| townname      |  avg_fev |  std_fev | prop_asthma |
+|:--------------|---------:|---------:|------------:|
+| Alpine        | 2087.101 | 291.1768 |   0.1144423 |
+| Atascadero    | 2075.897 | 324.0935 |   0.2528408 |
+| Lake Elsinore | 2038.849 | 303.6956 |   0.1274366 |
+| Lake Gregory  | 2084.700 | 319.9593 |   0.1512392 |
+| Lancaster     | 2003.044 | 317.1298 |   0.1640054 |
+| Lompoc        | 2034.354 | 351.0454 |   0.1142335 |
+| Long Beach    | 1985.861 | 319.4625 |   0.1359886 |
+| Mira Loma     | 1985.202 | 324.9634 |   0.1582359 |
+| Riverside     | 1989.881 | 277.5065 |   0.1100000 |
+| San Dimas     | 2026.794 | 318.7845 |   0.1712392 |
+| Santa Maria   | 2025.750 | 312.1725 |   0.1348240 |
+| Upland        | 2024.266 | 343.1637 |   0.1212392 |
 
 ``` r
 # fev and asthma by sex
-dat[, .(avg_fev = mean(fev), std_fev = sd(fev), prop_asthma = mean(asthma),
-    asthma_std = sd(asthma)), by = male] %>%
+dat[, .(avg_fev = mean(fev), std_fev = sd(fev), prop_asthma = mean(asthma)),
+    by = male] %>%
     knitr::kable()
 ```
 
-| male |  avg_fev |  std_fev | prop_asthma | asthma_std |
-|-----:|---------:|---------:|------------:|-----------:|
-|    0 | 1958.911 | 311.9181 |   0.1208035 |  0.3224043 |
-|    1 | 2103.787 | 307.5123 |   0.1726819 |  0.3728876 |
+| male |  avg_fev |  std_fev | prop_asthma |
+|-----:|---------:|---------:|------------:|
+|    0 | 1958.911 | 311.9181 |   0.1208035 |
+|    1 | 2103.787 | 307.5123 |   0.1726819 |
 
 ``` r
 # fev and asthma by obesity level
-dat[, .(avg_fev = mean(fev), std_fev = sd(fev), prop_asthma = mean(asthma),
-    asthma_std = sd(asthma)), by = obesity_level] %>%
+dat[, .(avg_fev = mean(fev), std_fev = sd(fev), prop_asthma = mean(asthma)),
+    by = obesity_level] %>%
     knitr::kable()
 ```
 
-| obesity_level |  avg_fev |  std_fev | prop_asthma | asthma_std |
-|:--------------|---------:|---------:|------------:|-----------:|
-| normal        | 1999.794 | 295.1964 |   0.1403606 |  0.3426863 |
-| obese         | 2266.154 | 325.4710 |   0.2081964 |  0.4034416 |
-| overweight    | 2224.322 | 317.4261 |   0.1640991 |  0.3687886 |
-| underweight   | 1698.327 | 303.3983 |   0.0857143 |  0.2840286 |
+| obesity_level |  avg_fev |  std_fev | prop_asthma |
+|:--------------|---------:|---------:|------------:|
+| normal        | 1999.794 | 295.1964 |   0.1403606 |
+| obese         | 2266.154 | 325.4710 |   0.2081964 |
+| overweight    | 2224.322 | 317.4261 |   0.1640991 |
+| underweight   | 1698.327 | 303.3983 |   0.0857143 |
 
 ``` r
 # fev and asthma by smoke and gas exposure
-dat[, .(avg_fev = mean(fev), std_fev = sd(fev), prop_asthma = mean(asthma),
-    asthma_std = sd(asthma)), by = smoke_gas_exposure] %>%
+dat[, .(avg_fev = mean(fev), std_fev = sd(fev), prop_asthma = mean(asthma)),
+    by = smoke_gas_exposure] %>%
     knitr::kable()
 ```
 
-| smoke_gas_exposure |  avg_fev |  std_fev | prop_asthma | asthma_std |
-|:-------------------|---------:|---------:|------------:|-----------:|
-| neither            | 2056.693 | 328.7843 |   0.1448168 |  0.3487352 |
-| gas                | 2022.671 | 319.3449 |   0.1491750 |  0.3519572 |
-| smoke              | 2055.714 | 295.6475 |   0.1717490 |  0.3768879 |
-| both               | 2024.778 | 300.6313 |   0.1277738 |  0.3291856 |
+| smoke_gas_exposure |  avg_fev |  std_fev | prop_asthma |
+|:-------------------|---------:|---------:|------------:|
+| neither            | 2056.693 | 328.7843 |   0.1448168 |
+| gas                | 2022.671 | 319.3449 |   0.1491750 |
+| smoke              | 2055.714 | 295.6475 |   0.1717490 |
+| both               | 2024.778 | 300.6313 |   0.1277738 |
 
 ### Looking at the Data (EDA)
 
