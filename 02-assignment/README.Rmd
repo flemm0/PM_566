@@ -262,7 +262,8 @@ No missing or implausible values for bmi column. The values are within the range
 ggplot(dat, aes(bmi, fev, color = townname)) +
   geom_jitter(size = 0.5) +
   geom_smooth(method = "lm", formula = y~x, size = 0.5, se = FALSE, color = "red") +
-  facet_wrap(~ townname, nrow = 3)
+  facet_wrap(~ townname, nrow = 3) +
+  labs(title = "Bmi vs Fev by Town")
 ```
 \
 The plots above show that forced expiratory volume and body mass index are positively correlated in each of the towns in the data set. Additionally, towns such as Alpine and Riverside have a relatively low positive slope, whereas towns such as San Dimas, Lake Elsinore, and Upland have steeper positive slopes. This suggests that the positive correlation between body mass index and forced expiratory volume varies slightly by region.
@@ -274,7 +275,8 @@ The plots above show that forced expiratory volume and body mass index are posit
 ggplot(data = dat, mapping = aes(x = fev)) +
   geom_histogram(mapping = aes(fill = factor(obesity_level)), bins = 70, alpha = 0.8) +
   scale_fill_manual(values = c("darkseagreen2", "dodgerblue", "firebrick2", "gold1")) +
-  guides(fill = guide_legend(title = "Obesity Category"))
+  guides(fill = guide_legend(title = "Obesity Category")) +
+  labs(title = "Fev by Bmi Category")
 ```
 \
 The plot above reveals that most people in the data set fall under the normal obesity level category, and that the average forced expiratory volume (fev) for people in this category lies at about 2000 with a normal distribution. As for people in the underweight category, the average fev is lower than that of those in the normal category, at about 1750. For people in both the overweight and obese categories, the average fev lies about at 2300, which is higher than the average for the people in the normal category.
@@ -284,7 +286,8 @@ The plot above reveals that most people in the data set fall under the normal ob
 ggplot(data = dat, mapping = aes(x = fev)) +
   geom_histogram(mapping = aes(fill = factor(smoke_gas_exposure)), bins = 70, alpha = 0.8) +
   scale_fill_manual(values = c("dodgerblue4", "lightpink", "cadetblue1", "yellow1")) +
-  guides(fill = guide_legend(title = "Obesity Category"))
+  guides(fill = guide_legend(title = "Obesity Category")) +
+  labs(title = "Fev by Smoke and Gas Exposure Category ")
 
 ```
 \
@@ -295,7 +298,7 @@ The plot above reveals that most people in the data set are classified as either
 ggplot(data = dat, mapping = aes(x = obesity_level, fill = factor(smoke_gas_exposure))) +
   geom_bar(position = "dodge") +
   scale_fill_manual(values = c("dodgerblue4", "lightpink", "cadetblue1", "darkorange1")) +
-  labs(fill = "Smoke and Gas Exposure")
+  labs(fill = "Smoke and Gas Exposure", title = "Bmi by Smoke and Gas Exposure Category")
 ```
 \
 From this bar chart of bmi category counts by obesity level, it is evident that the proportions of people that are exposed to gas, smoke, both, or neither are mostly consistent across the bmi categories. The highest proportion of people in each category have some exposure to gas, and the smallest proportion of people have some exposure to smoke. For the other types of exposure (both or neither), the proportion of people in those categories sits at about one third of that of the proportion of people exposed to gas only.
@@ -304,7 +307,8 @@ From this bar chart of bmi category counts by obesity level, it is evident that 
 ```{r plot stat summary of fev by obesity category}
 ggplot(data = dat, mapping = aes(x = forcats::fct_reorder(factor(obesity_level), fev, median), y = fev, color = obesity_level)) +
   stat_summary(fun.min = min, fun.max = max, fun = median) +
-  xlab("Obesity Category")
+  xlab("Obesity Category") +
+  labs(title = "Stat Summary of Fev by Bmi Category")
 ```
 \
 The above plot reveals that there is a positive correlation between increase in bmi and increase in forced expiratory volume. The median fev for those that are underweight is about 1700, and increases to 1950 for those that are normal, and up to 2200 and 2250 for those that are overweight and obese, respectively. Additionally, the range of values for the normal and obese categories are larger than the underweight and overweight categories.
@@ -313,7 +317,8 @@ The above plot reveals that there is a positive correlation between increase in 
 ```{r plot stat summary of fev by smoke/gas exposure}
 
 ggplot(data = dat, mapping = aes(y = fev, x = smoke_gas_exposure, color = smoke_gas_exposure)) +
-  stat_summary(fun.min = min, fun.max = max, fun = median)
+  stat_summary(fun.min = min, fun.max = max, fun = median) +
+  labs(title = "Stat Summary of Fev by Smoke and Gas Exposure Category")
 ```
 \
 The stat summary above reveals that when looking at fev by smoke and gas exposure, the median fev for the groups all lie at approximately 2000. The groups having no exposure to smoke or gas, as well as the group exposed to smoke only, have medians slightly higher than the other two groups. Additionally, the range of observations for the groups exposed to neither smoke nor gas, and gas only, are greater than for the other two groups.
@@ -337,7 +342,8 @@ The leaflet plot above reveals that higher concentration levels of pm 2.5 are as
 ```{r pm25 mass and fev association grouped boxplots}
 ggplot(data = dat, mapping = aes(y = fev, x = pm25_mass, group = factor(pm25_mass))) +
   geom_boxplot(width = 0.5) +
-  geom_smooth(mapping = aes(group=1), col = "red", formula = y ~ x, method = "lm", alpha = 0.01, linetype = "twodash")
+  geom_smooth(mapping = aes(group=1), col = "red", formula = y ~ x, method = "lm", alpha = 0.01, linetype = "twodash") +
+  labs(title = "Fev vs Concentration of PM 2.5 Mass")
 ```
 \
-The above boxplots show that there is a small negative correlation between forced expiratory volume and concentration of pm 2.5 mass, with a slight decrease in fev with increasing concentration of pm 2.5 mass. 
+The above boxplots show that there is a very small negative correlation between forced expiratory volume and concentration of pm 2.5 mass, with a slight decrease in fev with increasing concentration of pm 2.5 mass. 

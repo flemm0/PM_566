@@ -492,7 +492,7 @@ the range that the CDC provides for bmi measurements in children:
 ``` r
 ggplot(dat, aes(bmi, fev, color = townname)) + geom_jitter(size = 0.5) +
     geom_smooth(method = "lm", formula = y ~ x, size = 0.5, se = FALSE,
-        color = "red") + facet_wrap(~townname, nrow = 3)
+        color = "red") + facet_wrap(~townname, nrow = 3) + labs(title = "Bmi vs Fev by Town")
 ```
 
 ![](README_files/figure-gfm/facet%20plot%20of%20bmi%20vs%20fev-1.png)<!-- -->  
@@ -509,7 +509,8 @@ slightly by region.
 ``` r
 ggplot(data = dat, mapping = aes(x = fev)) + geom_histogram(mapping = aes(fill = factor(obesity_level)),
     bins = 70, alpha = 0.8) + scale_fill_manual(values = c("darkseagreen2",
-    "dodgerblue", "firebrick2", "gold1")) + guides(fill = guide_legend(title = "Obesity Category"))
+    "dodgerblue", "firebrick2", "gold1")) + guides(fill = guide_legend(title = "Obesity Category")) +
+    labs(title = "Fev by Bmi Category")
 ```
 
 ![](README_files/figure-gfm/histograms%20of%20fev%20by%20bmi-1.png)<!-- -->  
@@ -525,7 +526,8 @@ people in the normal category.
 ``` r
 ggplot(data = dat, mapping = aes(x = fev)) + geom_histogram(mapping = aes(fill = factor(smoke_gas_exposure)),
     bins = 70, alpha = 0.8) + scale_fill_manual(values = c("dodgerblue4",
-    "lightpink", "cadetblue1", "yellow1")) + guides(fill = guide_legend(title = "Obesity Category"))
+    "lightpink", "cadetblue1", "yellow1")) + guides(fill = guide_legend(title = "Obesity Category")) +
+    labs(title = "Fev by Smoke and Gas Exposure Category ")
 ```
 
 ![](README_files/figure-gfm/histogram%20of%20fev%20by%20smoke/gas-1.png)<!-- -->  
@@ -539,7 +541,8 @@ around 2050, with a standard deviation of about 300.
 ``` r
 ggplot(data = dat, mapping = aes(x = obesity_level, fill = factor(smoke_gas_exposure))) +
     geom_bar(position = "dodge") + scale_fill_manual(values = c("dodgerblue4",
-    "lightpink", "cadetblue1", "darkorange1")) + labs(fill = "Smoke and Gas Exposure")
+    "lightpink", "cadetblue1", "darkorange1")) + labs(fill = "Smoke and Gas Exposure",
+    title = "Bmi by Smoke and Gas Exposure Category")
 ```
 
 ![](README_files/figure-gfm/bmi%20vs%20smoke/gas%20barchart-1.png)<!-- -->  
@@ -557,7 +560,8 @@ people exposed to gas only.
 ``` r
 ggplot(data = dat, mapping = aes(x = forcats::fct_reorder(factor(obesity_level),
     fev, median), y = fev, color = obesity_level)) + stat_summary(fun.min = min,
-    fun.max = max, fun = median) + xlab("Obesity Category")
+    fun.max = max, fun = median) + xlab("Obesity Category") +
+    labs(title = "Stat Summary of Fev by Bmi Category")
 ```
 
 ![](README_files/figure-gfm/plot%20stat%20summary%20of%20fev%20by%20obesity%20category-1.png)<!-- -->  
@@ -572,7 +576,7 @@ overweight categories.
 ``` r
 ggplot(data = dat, mapping = aes(y = fev, x = smoke_gas_exposure,
     color = smoke_gas_exposure)) + stat_summary(fun.min = min,
-    fun.max = max, fun = median)
+    fun.max = max, fun = median) + labs(title = "Stat Summary of Fev by Smoke and Gas Exposure Category")
 ```
 
 ![](README_files/figure-gfm/plot%20stat%20summary%20of%20fev%20by%20smoke/gas%20exposure-1.png)<!-- -->  
@@ -614,10 +618,10 @@ closer to the coastline are low concentration levels of pm 2.5 of below
 ggplot(data = dat, mapping = aes(y = fev, x = pm25_mass, group = factor(pm25_mass))) +
     geom_boxplot(width = 0.5) + geom_smooth(mapping = aes(group = 1),
     col = "red", formula = y ~ x, method = "lm", alpha = 0.01,
-    linetype = "twodash")
+    linetype = "twodash") + labs(title = "Fev vs Concentration of PM 2.5 Mass")
 ```
 
 ![](README_files/figure-gfm/pm25%20mass%20and%20fev%20association%20grouped%20boxplots-1.png)<!-- -->  
-The above boxplots show that there is a small negative correlation
+The above boxplots show that there is a very small negative correlation
 between forced expiratory volume and concentration of pm 2.5 mass, with
 a slight decrease in fev with increasing concentration of pm 2.5 mass.
