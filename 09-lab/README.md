@@ -59,16 +59,16 @@ microbenchmark::microbenchmark(
 ```
 
     ## Unit: microseconds
-    ##       expr     min       lq       mean   median        uq       max neval
-    ##     fun1() 554.362 715.3260 1382.91200 871.6915 1092.1265 35396.317   100
-    ##  fun1alt()  28.556  33.0305   96.17969  39.3770   46.0095  5280.182   100
+    ##       expr    min       lq       mean   median       uq      max neval
+    ##     fun1() 514.18 692.0945 1129.23712 731.4535 987.1570 27633.89   100
+    ##  fun1alt()  27.96  30.8575   68.48511  33.5245  41.7535  2987.08   100
 
 The second approach is much faster.
 
 2.  Find the column max (hint: Checkout the function max.col()).
 
 ``` r
-# Data Generating Process (10 x 10,000 matrix)
+# Data Generating Process (10 x 1,000 matrix)
 set.seed(1234)
 x <- matrix(rnorm(1e4), nrow=10)
 
@@ -77,14 +77,18 @@ fun2 <- function(x) {
   apply(x, 2, max)
 }
 
+
 fun2alt <- function(x) {
-  # YOUR CODE HERE
+  # max.col() returns positions in the matrix where your max values are, works on rows so need to transpose matrix
+  x[cbind(max.col(t(x)), 1:ncol(x))]
+  
 }
+
 
 # Benchmarking
 microbenchmark::microbenchmark(
-  fun2(),
-  fun2alt()
+  fun2(x),
+  fun2alt(x)
 )
 ```
 

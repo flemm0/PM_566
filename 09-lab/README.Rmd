@@ -2,7 +2,11 @@
 title: "09 - High Performance Computing"
 author: "Flemming Wu"
 date: "`r Sys.Date()`"
-output: github_document
+output: 
+    github_document:
+        html_preview: false
+    html_document: default
+    pdf_document: default
 always_allow_html: true
 ---
 
@@ -64,8 +68,8 @@ The second approach is much faster.
 
 2. Find the column max (hint: Checkout the function max.col()).
 
-```{r}
-# Data Generating Process (10 x 10,000 matrix)
+```{r max col}
+# Data Generating Process (10 x 1,000 matrix)
 set.seed(1234)
 x <- matrix(rnorm(1e4), nrow=10)
 
@@ -74,16 +78,31 @@ fun2 <- function(x) {
   apply(x, 2, max)
 }
 
+
 fun2alt <- function(x) {
-  # YOUR CODE HERE
+  # max.col() returns positions in the matrix where your max values are, works on rows so need to transpose matrix
+  x[cbind(max.col(t(x)), 1:ncol(x))]
+  
 }
+
 
 # Benchmarking
 microbenchmark::microbenchmark(
-  fun2(),
-  fun2alt()
+  fun2(x),
+  fun2alt(x)
 )
 
+```
+
+```{r, include=FALSE, eval=FALSE}
+d <- matrix(1:16,ncol=4)
+
+d
+
+diag(d)
+
+cbind(1:4,1:4)
+d[cbind(1:4,1:4)]
 ```
 
 
