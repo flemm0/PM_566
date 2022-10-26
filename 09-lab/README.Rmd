@@ -7,7 +7,11 @@ always_allow_html: true
 ---
 
 ```{r setup, include = FALSE}
-knitr::opts_chunk$set(echo = TRUE, eval = FALSE)
+knitr::opts_chunk$set(echo = TRUE, eval=FALSE)
+```
+
+```{r load libraries}
+library(parallel)
 ```
 
 
@@ -29,10 +33,11 @@ Give yourself a few minutes to think about what you just learned. List three exa
 ### Problem 2: Before you
 The following functions can be written to be more efficient without using parallel:
 
-1. This function generates a n x k dataset with all its entries distributed poission with mean lambda.
+1. This function generates a n x k dataset with all its entries distributed Poisson with mean lambda.
 
-```{r}
-fun1 <- function(n = 100, k = 4, lambda = 4) {
+```{r, eval=TRUE}
+set.seed(1235)
+fun1 <- function(n = 100, k = 4, lambda = 4) { # returns matrix with 100 (n) rows and 4 (k) columns
   x <- NULL
   
   for (i in 1:n)
@@ -41,8 +46,9 @@ fun1 <- function(n = 100, k = 4, lambda = 4) {
   return(x)
 }
 
-fun1alt <- function(n = 100, k = 4, lambda = 4) {
-  # YOUR CODE HERE
+
+fun1alt <- function(n = 100, k = 4, lambda = 4) { # create matrix all at once and populate with set numbers instead of serially adding rows
+  x <- matrix(rpois(n*k, lambda), ncol = 4)
 }
 
 # Benchmarking
@@ -51,6 +57,9 @@ microbenchmark::microbenchmark(
   fun1alt()
 )
 ```
+
+The second approach is much faster.
+
 
 
 2. Find the column max (hint: Checkout the function max.col()).

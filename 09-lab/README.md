@@ -3,6 +3,10 @@
 Flemming Wu
 2022-10-26
 
+``` r
+library(parallel)
+```
+
 ### Learning goals
 
 In this lab, you are expected to learn/put in practice the following
@@ -29,10 +33,11 @@ The following functions can be written to be more efficient without
 using parallel:
 
 1.  This function generates a n x k dataset with all its entries
-    distributed poission with mean lambda.
+    distributed Poisson with mean lambda.
 
 ``` r
-fun1 <- function(n = 100, k = 4, lambda = 4) {
+set.seed(1235)
+fun1 <- function(n = 100, k = 4, lambda = 4) { # returns matrix with 100 (n) rows and 4 (k) columns
   x <- NULL
   
   for (i in 1:n)
@@ -41,8 +46,9 @@ fun1 <- function(n = 100, k = 4, lambda = 4) {
   return(x)
 }
 
-fun1alt <- function(n = 100, k = 4, lambda = 4) {
-  # YOUR CODE HERE
+
+fun1alt <- function(n = 100, k = 4, lambda = 4) { # create matrix all at once and populate with set numbers instead of serially adding rows
+  x <- matrix(rpois(n*k, lambda), ncol = 4)
 }
 
 # Benchmarking
@@ -51,6 +57,13 @@ microbenchmark::microbenchmark(
   fun1alt()
 )
 ```
+
+    ## Unit: microseconds
+    ##       expr     min       lq       mean   median        uq       max neval
+    ##     fun1() 554.362 715.3260 1382.91200 871.6915 1092.1265 35396.317   100
+    ##  fun1alt()  28.556  33.0305   96.17969  39.3770   46.0095  5280.182   100
+
+The second approach is much faster.
 
 2.  Find the column max (hint: Checkout the function max.col()).
 
