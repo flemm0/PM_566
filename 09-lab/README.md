@@ -17,16 +17,6 @@ skills:
 -   Use Rscript to submit jobs  
 -   Practice your skills with Git.  
 
-### Problem 1: Think
-
-Give yourself a few minutes to think about what you just learned. List
-three examples of problems that you believe may be solved using parallel
-computing, and check for packages on the HPC CRAN task view that may be
-related to it.
-
--   pvclust for hierarchical clustering with multiscale bootstraps
--   
-
 ### Problem 2: Before you
 
 The following functions can be written to be more efficient without
@@ -59,9 +49,9 @@ microbenchmark::microbenchmark(
 ```
 
     ## Unit: microseconds
-    ##       expr    min       lq       mean   median       uq      max neval
-    ##     fun1() 514.18 692.0945 1129.23712 731.4535 987.1570 27633.89   100
-    ##  fun1alt()  27.96  30.8575   68.48511  33.5245  41.7535  2987.08   100
+    ##       expr     min       lq       mean   median      uq       max neval
+    ##     fun1() 502.087 693.5625 1004.30026 715.2475 832.353 23129.207   100
+    ##  fun1alt()  27.860  31.4050   84.09206  33.8655  39.500  4753.557   100
 
 The second approach is much faster.
 
@@ -80,6 +70,7 @@ fun2 <- function(x) {
 
 fun2alt <- function(x) {
   # max.col() returns positions in the matrix where your max values are, works on rows so need to transpose matrix
+  # subsetting the matrix with vectors is vectorized
   x[cbind(max.col(t(x)), 1:ncol(x))]
   
 }
@@ -91,6 +82,11 @@ microbenchmark::microbenchmark(
   fun2alt(x)
 )
 ```
+
+    ## Unit: microseconds
+    ##        expr      min        lq      mean    median        uq      max neval
+    ##     fun2(x) 1426.218 1533.8040 1988.4175 1660.8390 2133.7470 4863.094   100
+    ##  fun2alt(x)  139.710  192.2875  287.2375  222.8835  265.0745 4983.404   100
 
 ### Problem 3: Parallelize Everything
 
@@ -111,14 +107,19 @@ my_boot <- function(dat, stat, R, ncpus = 1L) {
   
   # Getting the random indices
   n <- nrow(dat)
-  idx <- matrix(sample.int(n, n*R, TRUE), nrow=n, ncol=R)
+  idx <- matrix(sample.int(n, n*R, replace = TRUE), nrow=n, ncol=R)
  
   # Making the cluster using `ncpus`
-  # STEP 1: GOES HERE
-  # STEP 2: GOES HERE
+  cl <- makePSOCKcluster(4)
+  clusterSetRNGStream(cl, 123)
   
-    # STEP 3: THIS FUNCTION NEEDS TO BE REPLACES WITH parLapply
-  ans <- lapply(seq_len(R), function(i) {
+  clusterExport(cl, c("stat", "dat", "idx"), envir = environment())
+  
+    # STEP 3: THIS FUNCTION NEEDS TO BE REPLACED WITH parLapply
+  ans <- parLapply(
+    cl, 
+    seq_len(R), 
+    function(i) {
     stat(dat[idx[,i], , drop=FALSE])
   })
   
@@ -126,7 +127,7 @@ my_boot <- function(dat, stat, R, ncpus = 1L) {
   ans <- do.call(rbind, ans)
   
   # STEP 4: GOES HERE
-  
+  stopCluster(cl)
   ans
   
 }
@@ -151,10 +152,24 @@ ans1 <- my_boot(dat = data.frame(x, y), my_stat, R = R, ncpus = 2L)
 
 # You should get something like this
 t(apply(ans1, 2, quantile, c(.025,.975)))
+```
+
+    ##                   2.5%      97.5%
+    ## (Intercept) -0.1386903 0.04856752
+    ## x            4.8685162 5.04351239
+
+``` r
 ##                   2.5%      97.5%
 ## (Intercept) -0.1372435 0.05074397
 ## x            4.8680977 5.04539763
 ans0
+```
+
+    ##                  2.5 %     97.5 %
+    ## (Intercept) -0.1379033 0.04797344
+    ## x            4.8650100 5.04883353
+
+``` r
 ##                  2.5 %     97.5 %
 ## (Intercept) -0.1379033 0.04797344
 ## x            4.8650100 5.04883353
@@ -165,8 +180,17 @@ ans0
 
 ``` r
 system.time(my_boot(dat = data.frame(x, y), my_stat, R = 4000, ncpus = 1L))
+```
+
+    ##    user  system elapsed 
+    ##   0.247   0.071   2.982
+
+``` r
 system.time(my_boot(dat = data.frame(x, y), my_stat, R = 4000, ncpus = 2L))
 ```
+
+    ##    user  system elapsed 
+    ##   0.233   0.053   2.869
 
 ### Problem 4: Compile this markdown document using Rscript
 
