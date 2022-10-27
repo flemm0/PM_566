@@ -1,0 +1,91 @@
+---
+title: "Assignment 03: Web Scraping and Text Mining"
+author: "Flemming Wu"
+date: "`r Sys.Date()`"
+output: github_document
+always_allow_html: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(tidy.opts = list(width.cutoff = 60), tidy = TRUE)
+setwd("~/Desktop/PM566/GitHub/03-assignment")
+```
+
+```{r load libs}
+library(httr)
+library(rvest)
+library(stringr)
+library(xml2)
+```
+
+
+### APIs
+
+* Using the NCBI API, look for papers that show up under the term “sars-cov-2 trial vaccine.” Look for the data in the pubmed database, and then retrieve the details of the paper as shown in lab 7. How many papers were you able to find?
+
+* Using the list of pubmed ids you retrieved, download each papers’ details using the query parameter rettype = abstract. If you get more than 250 ids, just keep the first 250.
+
+* As we did in lab 7. Create a dataset containing the following:
+
+  1. Pubmed ID number,
+  
+  2. Title of the paper,
+  
+  3. Name of the journal where it was published,
+  
+  4. Publication date, and
+  
+  5. Abstract of the paper (if any).
+  
+
+```{r find number of papers}
+
+# using rvest
+rvest::read_html("https://pubmed.ncbi.nlm.nih.gov/?term=sars-cov-2+trial+vaccine") %>%
+  html_node(xpath = "/html/body/main/div[9]/div[2]/div[2]/div[1]/div[1]") %>%
+  as.character() %>%
+  str_extract_all("([:digit:]{1,3},)+?[:digit:]{3}") 
+
+
+# using xml2
+website <- read_html("https://pubmed.ncbi.nlm.nih.gov/?term=sars-cov-2+trial+vaccine")
+
+count <- xml_find_first(website, xpath = "/html/body/main/div[9]/div[2]/div[2]/div[1]/div[1]") %>%
+  as.character() %>%
+  str_extract("([:digit:]{1,3},)+?[:digit:]{3}")
+
+
+paste0("I have found ", count, " papers that show up under the term: sars-cov-2 trial vaccine")
+```
+
+```{r NCBI api}
+query_ids <- GET(
+  url = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi",
+  query = list(
+    term = "sars-cov-2 trial vaccine",
+    db = "pubmed",
+    rettype = "abstract",
+    retmax = 1000)
+)
+
+ids <- content(query_ids)
+
+ids <- as.character(ids)
+
+ids
+```
+
+
+
+
+### Text Mining
+
+A new dataset has been added to the data science data repository (https://github.com/USCbiostats/data-science-data/tree/master/03_pubmed)[https://github.com/USCbiostats/data-science-data/tree/master/03_pubmed]. The dataset contains 3241 abstracts from articles across 5 search terms. Your job is to analyse these abstracts to find interesting insights.
+
+1. Tokenize the abstracts and count the number of each token. Do you see anything interesting? Does removing stop words change what tokens appear as the most frequent? What are the 5 most common tokens for each search term after removing stopwords?
+
+2. Tokenize the abstracts into bigrams. Find the 10 most common bigram and visualize them with ggplot2.
+Calculate the TF-IDF value for each word-search term combination. (here you want the search term to be the “document”) 
+
+3. What are the 5 tokens from each search term with the highest TF-IDF value? How are the results different from the answers you got in question 1?
