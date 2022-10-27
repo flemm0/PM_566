@@ -49,9 +49,9 @@ microbenchmark::microbenchmark(
 ```
 
     ## Unit: microseconds
-    ##       expr     min       lq       mean   median      uq       max neval
-    ##     fun1() 502.087 693.5625 1004.30026 715.2475 832.353 23129.207   100
-    ##  fun1alt()  27.860  31.4050   84.09206  33.8655  39.500  4753.557   100
+    ##       expr     min      lq     mean   median      uq       max neval
+    ##     fun1() 320.839 483.577 707.9699 532.8155 560.524 18538.466   100
+    ##  fun1alt()  19.169  22.676  45.7953  25.9575  28.469  2013.841   100
 
 The second approach is much faster.
 
@@ -84,9 +84,9 @@ microbenchmark::microbenchmark(
 ```
 
     ## Unit: microseconds
-    ##        expr      min        lq      mean    median        uq      max neval
-    ##     fun2(x) 1426.218 1533.8040 1988.4175 1660.8390 2133.7470 4863.094   100
-    ##  fun2alt(x)  139.710  192.2875  287.2375  222.8835  265.0745 4983.404   100
+    ##        expr      min       lq      mean   median        uq      max neval
+    ##     fun2(x) 1097.038 1166.894 1493.1025 1256.424 1622.3010 4080.066   100
+    ##  fun2alt(x)  104.292  153.639  224.3649  178.929  210.8355 3972.556   100
 
 ### Problem 3: Parallelize Everything
 
@@ -183,14 +183,14 @@ system.time(my_boot(dat = data.frame(x, y), my_stat, R = 4000, ncpus = 1L))
 ```
 
     ##    user  system elapsed 
-    ##   0.247   0.071   2.982
+    ##   0.225   0.069   2.476
 
 ``` r
 system.time(my_boot(dat = data.frame(x, y), my_stat, R = 4000, ncpus = 2L))
 ```
 
     ##    user  system elapsed 
-    ##   0.233   0.053   2.869
+    ##   0.222   0.047   2.283
 
 ### Problem 4: Compile this markdown document using Rscript
 
