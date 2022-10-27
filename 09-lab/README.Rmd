@@ -102,7 +102,7 @@ d[cbind(1:4,1:4)]
 
 ### Problem 3: Parallelize Everything
 
-We will now turn our attention to non-parametric (bootstrapping)[https://en.wikipedia.org/wiki/Bootstrapping_(statistics)]. Among its many uses, non-parametric bootstrapping allow us to obtain confidence intervals for parameter estimates without relying on parametric assumptions.
+We will now turn our attention to non-parametric [bootstrapping](https://en.wikipedia.org/wiki/Bootstrapping_(statistics)). Among its many uses, non-parametric bootstrapping allow us to obtain confidence intervals for parameter estimates without relying on parametric assumptions.
 
 The main assumption is that we can approximate many experiments by resampling observations from our original dataset, which reflects the population.
 

@@ -49,9 +49,9 @@ microbenchmark::microbenchmark(
 ```
 
     ## Unit: microseconds
-    ##       expr     min      lq     mean   median      uq       max neval
-    ##     fun1() 320.839 483.577 707.9699 532.8155 560.524 18538.466   100
-    ##  fun1alt()  19.169  22.676  45.7953  25.9575  28.469  2013.841   100
+    ##       expr     min       lq      mean   median       uq      max neval
+    ##     fun1() 434.570 503.9290 726.30827 511.8385 565.4490 18741.66   100
+    ##  fun1alt()  20.013  21.9565  52.82013  24.0835  26.8765  2748.73   100
 
 The second approach is much faster.
 
@@ -84,14 +84,14 @@ microbenchmark::microbenchmark(
 ```
 
     ## Unit: microseconds
-    ##        expr      min       lq      mean   median        uq      max neval
-    ##     fun2(x) 1097.038 1166.894 1493.1025 1256.424 1622.3010 4080.066   100
-    ##  fun2alt(x)  104.292  153.639  224.3649  178.929  210.8355 3972.556   100
+    ##        expr      min       lq     mean    median       uq      max neval
+    ##     fun2(x) 1036.065 1166.167 1501.132 1238.9400 1521.983 8093.638   100
+    ##  fun2alt(x)  102.832  144.173  210.623  161.4615  202.046 2935.670   100
 
 ### Problem 3: Parallelize Everything
 
 We will now turn our attention to non-parametric
-(bootstrapping)\[<https://en.wikipedia.org/wiki/Bootstrapping_(statistics)>\].
+[bootstrapping](https://en.wikipedia.org/wiki/Bootstrapping_(statistics)).
 Among its many uses, non-parametric bootstrapping allow us to obtain
 confidence intervals for parameter estimates without relying on
 parametric assumptions.
@@ -183,14 +183,14 @@ system.time(my_boot(dat = data.frame(x, y), my_stat, R = 4000, ncpus = 1L))
 ```
 
     ##    user  system elapsed 
-    ##   0.225   0.069   2.476
+    ##   0.186   0.058   2.555
 
 ``` r
 system.time(my_boot(dat = data.frame(x, y), my_stat, R = 4000, ncpus = 2L))
 ```
 
     ##    user  system elapsed 
-    ##   0.222   0.047   2.283
+    ##   0.191   0.041   2.374
 
 ### Problem 4: Compile this markdown document using Rscript
 
