@@ -76,7 +76,7 @@ ids <- stringr::str_extract_all(ids, "<Id>[:digit:]*</Id>")[[1]]
 ids <- stringr::str_remove_all(ids, "</?Id>")
 
 publications <- GET(
-  url   = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi",
+  url   = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi", # the link now will be using efetch, instead of esearch
   query = list(
     db = "pubmed",
     id = str_c(ids, collapse = ","),

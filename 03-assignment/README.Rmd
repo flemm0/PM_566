@@ -63,45 +63,6 @@ count2 <- xml2::xml_find_first(website, xpath = "/html/body/main/div[9]/div[2]/d
 paste0("I have found ", count2, " papers that show up under the term: sars-cov-2 trial vaccine using xml2")
 ```
 
-```{r NCBI api, eval=FALSE, include=FALSE}
-# get list of PubMed Ids for sars-cov-2 trial vaccine articles
-query_ids <- GET(
-  url = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi",
-  query = list(
-    term = "sars-cov-2 trial vaccine",
-    retmax = 250)
-)
-
-ids1 <- httr::content(query_ids) 
-ids1 <- as.character(ids1)
-
-
-ids1 <- stringr::str_extract_all(ids1, "<Id>[:digit:]*</Id>")[[1]] 
-
-ids1 <- stringr::str_remove_all(ids1, "</?Id>")
-
-ids1
-
-
-# retrieve information about articles
-
-publications <- GET(
-  url   = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi",
-  query = list(
-    db = "pubmed",
-    id = str_c(ids, collapse = ","),
-    retmax = 250,
-    rettype = "abstract"
-    )
-)
-
-
-publications <- httr::content(publications)
-publications_txt <- as.character(publications)
-
-publications_txt
-```
-
 
 
 ```{r}
@@ -120,7 +81,7 @@ ids <- stringr::str_extract_all(ids, "<Id>[:digit:]*</Id>")[[1]]
 ids <- stringr::str_remove_all(ids, "</?Id>")
 
 publications <- GET(
-  url   = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi",
+  url   = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi", # the link now will be using efetch, instead of esearch
   query = list(
     db = "pubmed",
     id = str_c(ids, collapse = ","),
