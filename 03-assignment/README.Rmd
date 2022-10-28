@@ -89,7 +89,7 @@ publications <- GET(
 )
 
 # Turning the output into character vector
-publications <- httr::content(publications)
+publications <- httr::content(publications) %>% xml2::xml_children()
 publications_txt <- as.character(publications)
 
 ```
@@ -99,50 +99,46 @@ publications_txt <- as.character(publications)
 ```{r get required informatio from publications text}
 
 # article titles
-titles <- str_extract_all(publications_txt, "<ArticleTitle>.*</ArticleTitle>")[[1]] %>% str_remove_all("</?[:alpha:]*>")
+titles <- str_extract(publications_txt, "<ArticleTitle>.*</ArticleTitle>") %>% str_remove_all("</?[:alpha:]*>")
 
 # names of journals
-journals <- str_extract_all(publications_txt, "<Title>.*</Title>")[[1]] %>% str_remove_all("</?[:alpha:]*>")
+journals <- str_extract(publications_txt, "<ISOAbbreviation>.*</ISOAbbreviation>") %>% str_remove_all("</?[:alpha:]+>")
 
 
 # publication dates
-dates <- str_remove_all(publications_txt, "\\n") %>% str_extract_all("<PubDate>.{1,}?</PubDate>")
-dates <- dates[[1]]
-
-dates <- dates %>% str_squish() %>% str_remove_all("</?(Year|Month|Day|PubDate)>") %>% str_trim(side = "both")
+dates <- str_remove_all(publications_txt, "\\n") %>% 
+  str_extract("<PubDate>.*</PubDate>") %>% 
+  str_squish() %>% 
+  str_remove_all("</?[:alpha:]+>") %>% 
+  str_trim(side = "both")
 
 
 # abstract texts
-abstracts <- str_remove_all(publications_txt, "\\n") %>% str_extract_all("<Abstract>.{1,}?</Abstract>")
-abstracts <- abstracts[[1]]
-
-abstracts <- str_remove_all(abstracts, "</?.{1,}?>")
+abstracts <- str_remove_all(publications_txt, "\\n") %>% 
+  str_extract("<Abstract>.{1,}?</Abstract>") %>%
+  str_remove_all("(</?AbstractText Label.{1,}?>|</?Abstract>|</?AbstractText>)") %>%
+  str_trim(side = "both")
 
 ```
 
 
-```{r}
-journals <- str_extract_all(publications_txt, "<Title>.*</Title>")[[1]] %>% str_remove_all("</?[:alpha:]*>")
-journals
-```
-```{r}
-publications_txt
-```
 
 
 
-```{r create data frame, eval=FALSE}
+```{r create data frame}
 df <- data.frame(
   PubMed_Id = ids,
   title = titles,
   journal = journals,
   publication_date = dates,
-  abstract = abstracts
+  abstract = abstracts,
+  check.rows = FALSE
 )
 ```
 
 ```{r}
-
+head(df) %>%
+  knitr::kable()
 ```
 
 
