@@ -65,27 +65,25 @@ paste0("I have found ", count2, " papers that show up under the term: sars-cov-2
 
 
 
-```{r}
+```{r query 250 articles from pubmed}
+# get list of ID numbers
 query_ids <- GET(
   url = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi",
   query = list(
     term = "sars-cov-2 trial vaccine",
-    retmax = 250)
+    retmax = 250) 
 )
 
 # Extracting the content of the response of GET
 ids <- httr::content(query_ids) %>% as.character()
 
-ids <- stringr::str_extract_all(ids, "<Id>[:digit:]*</Id>")[[1]]
-
-ids <- stringr::str_remove_all(ids, "</?Id>")
+ids <- stringr::str_extract_all(ids, "<Id>[:digit:]*</Id>")[[1]] %>% stringr::str_remove_all("</?Id>")
 
 publications <- GET(
   url   = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi", # the link now will be using efetch, instead of esearch
   query = list(
     db = "pubmed",
     id = str_c(ids, collapse = ","),
-    retmax = 250,
     rettype = "abstract"
     )
 )
@@ -98,15 +96,55 @@ publications_txt <- as.character(publications)
 
 
 
-```{r}
+```{r get required informatio from publications text}
+
+# article titles
 titles <- str_extract_all(publications_txt, "<ArticleTitle>.*</ArticleTitle>")[[1]] %>% str_remove_all("</?[:alpha:]*>")
 
+# names of journals
 journals <- str_extract_all(publications_txt, "<Title>.*</Title>")[[1]] %>% str_remove_all("</?[:alpha:]*>")
 
-date <- str_extract_all(publications_txt, "<PubDate>.*</PubDate>")[[1]] %>% str_remove_all("</?[:alpha:]*>")
 
-abstracts <- str_extract_all(publications_txt, "<AbstractText.*>.*</AbstractText.*>")[[1]] %>% str_remove_all("</?[:alpha:]*>")
+# publication dates
+dates <- str_remove_all(publications_txt, "\\n") %>% str_extract_all("<PubDate>.{1,}?</PubDate>")
+dates <- dates[[1]]
+
+dates <- dates %>% str_squish() %>% str_remove_all("</?(Year|Month|Day|PubDate)>") %>% str_trim(side = "both")
+
+
+# abstract texts
+abstracts <- str_remove_all(publications_txt, "\\n") %>% str_extract_all("<Abstract>.{1,}?</Abstract>")
+abstracts <- abstracts[[1]]
+
+abstracts <- str_remove_all(abstracts, "</?.{1,}?>")
+
 ```
+
+
+```{r}
+journals <- str_extract_all(publications_txt, "<Title>.*</Title>")[[1]] %>% str_remove_all("</?[:alpha:]*>")
+journals
+```
+```{r}
+publications_txt
+```
+
+
+
+```{r create data frame, eval=FALSE}
+df <- data.frame(
+  PubMed_Id = ids,
+  title = titles,
+  journal = journals,
+  publication_date = dates,
+  abstract = abstracts
+)
+```
+
+```{r}
+
+```
+
 
 
 ### Text Mining
