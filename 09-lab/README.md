@@ -1,7 +1,7 @@
 09 - High Performance Computing
 ================
 Flemming Wu
-2022-10-26
+2022-10-29
 
 ``` r
 library(parallel)
@@ -49,9 +49,9 @@ microbenchmark::microbenchmark(
 ```
 
     ## Unit: microseconds
-    ##       expr     min       lq      mean   median       uq      max neval
-    ##     fun1() 434.570 503.9290 726.30827 511.8385 565.4490 18741.66   100
-    ##  fun1alt()  20.013  21.9565  52.82013  24.0835  26.8765  2748.73   100
+    ##       expr     min        lq      mean    median        uq       max neval
+    ##     fun1() 761.777 1108.7115 1981.2660 1188.9675 1562.5970 47571.833   100
+    ##  fun1alt()  35.350   42.3985  111.7145   47.4625   52.2825  5935.198   100
 
 The second approach is much faster.
 
@@ -84,9 +84,9 @@ microbenchmark::microbenchmark(
 ```
 
     ## Unit: microseconds
-    ##        expr      min       lq     mean    median       uq      max neval
-    ##     fun2(x) 1036.065 1166.167 1501.132 1238.9400 1521.983 8093.638   100
-    ##  fun2alt(x)  102.832  144.173  210.623  161.4615  202.046 2935.670   100
+    ##        expr      min       lq      mean   median        uq      max neval
+    ##     fun2(x) 2077.164 2783.651 3388.0348 2954.803 3571.5700 7797.897   100
+    ##  fun2alt(x)  157.951  302.524  477.2013  332.117  399.5665 9913.986   100
 
 ### Problem 3: Parallelize Everything
 
@@ -183,14 +183,14 @@ system.time(my_boot(dat = data.frame(x, y), my_stat, R = 4000, ncpus = 1L))
 ```
 
     ##    user  system elapsed 
-    ##   0.186   0.058   2.555
+    ##   0.324   0.085   6.631
 
 ``` r
 system.time(my_boot(dat = data.frame(x, y), my_stat, R = 4000, ncpus = 2L))
 ```
 
     ##    user  system elapsed 
-    ##   0.191   0.041   2.374
+    ##   0.307   0.087   6.830
 
 ### Problem 4: Compile this markdown document using Rscript
 

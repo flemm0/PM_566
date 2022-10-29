@@ -10,3 +10,5 @@ readr
 purrr
 dplyr
 forcats
+tidytext
+gridExtra

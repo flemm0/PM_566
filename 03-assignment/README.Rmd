@@ -9,7 +9,7 @@ always_allow_html: true
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE, cache = TRUE)
 knitr::opts_chunk$set(tidy.opts = list(width.cutoff = 60), tidy = TRUE)
-#setwd("~/Desktop/PM566/GitHub/03-assignment")
+setwd("~/Desktop/PM566/GitHub/03-assignment")
 rm(list=ls())
 ```
 
@@ -19,6 +19,9 @@ library(rvest)
 library(stringr)
 library(xml2)
 library(tidyverse)
+library(tidytext)
+library(forcats)
+require(gridExtra)
 ```
 
 
@@ -42,7 +45,6 @@ library(tidyverse)
   
 
 ```{r find number of papers}
-
 # using rvest
 count1 <- rvest::read_html("https://pubmed.ncbi.nlm.nih.gov/?term=sars-cov-2+trial+vaccine") %>%
   html_node(xpath = "/html/body/main/div[9]/div[2]/div[2]/div[1]/div[1]") %>%
@@ -136,8 +138,8 @@ df <- data.frame(
 )
 ```
 
-```{r}
-head(df) %>%
+```{r view data frame}
+head(df, n = 3) %>%
   knitr::kable()
 ```
 
@@ -149,7 +151,95 @@ A new dataset has been added to the data science data repository (https://github
 
 1. Tokenize the abstracts and count the number of each token. Do you see anything interesting? Does removing stop words change what tokens appear as the most frequent? What are the 5 most common tokens for each search term after removing stopwords?
 
+```{r read in data from GitHub}
+pm <- read_csv("https://raw.githubusercontent.com/USCbiostats/data-science-data/master/03_pubmed/pubmed.csv", col_types = c("c", "c"))
+```
+
+
+```{r tokenize abstracts, message=FALSE}
+pm %>%
+  unnest_tokens(token, abstract) %>%
+  count(token, sort = TRUE) %>%
+  top_n(n = 20) %>%
+  ggplot(aes(x = n, y = fct_reorder(token, n))) +
+  geom_col() +
+  labs(y = "Token", title = "Top 20 Most Frequent Words in PubMed Data Set")
+```
+
+There is nothing particularly interesting about the most frequent words in the abstract texts, as most of them contain stop words. Some of the non-stop words include "patients", "cancer", and "covid".
+
+```{r removing stop words and numbers, message=FALSE}
+pm %>%
+  unnest_tokens(token, abstract) %>%
+  anti_join(stop_words, by = c("token" = "word")) %>%
+  filter( !grepl(pattern = "^[0-9]+$", x = token)) %>%
+  count(token, sort = TRUE) %>%
+  top_n(n = 30) %>%
+  ggplot(aes(x = n, y = fct_reorder(token, n))) +
+  geom_col() +
+  labs(y = "Token", title = "Top 20 Most Frequent Words in PubMed Data Set (Stop Words and Numbers Removed)") + 
+  theme(plot.title = element_text(size = 10))
+```
+
+After removing stop words and digits, it is evident that the text contained in the data set are about health related topics, with the most frequent words including: "covid", "patients", "disease", and "eclampsia".
+
+```{r top 5 tokens for each search term after removing stop words, warning=FALSE, fig.width=12, fig.height=12, fig.align='center'}
+top_5 <- pm %>%
+  unnest_tokens(token, abstract) %>%
+  anti_join(stop_words, by = c("token" = "word")) %>%
+  filter(!grepl(pattern = "^[0-9]+$", x = token)) %>%
+  group_by(term) %>%
+  count(token, sort = TRUE) %>%
+  top_n(5) %>%
+  arrange(term)
+
+p1 <- ggplot(top_5 %>% filter(term == "covid"), aes(n, fct_reorder(token, n))) +
+  geom_col() +
+  labs(y = "token", title = "Term: covid")
+
+p2 <- ggplot(top_5 %>% filter(term == "cystic fibrosis"), aes(n, fct_reorder(token, n))) +
+  geom_col() +
+  labs(y = "token", title = "Term: cystic fibrosis")
+             
+p3 <- ggplot(top_5 %>% filter(term == "meningitis"), aes(n, fct_reorder(token, n))) +
+  geom_col() +
+  labs(y = "token", title = "Term: meningitis")
+
+p4 <- ggplot(top_5 %>% filter(term == "preeclampsia"), aes(n, fct_reorder(token, n))) +
+  geom_col() +
+  labs(y = "token", title = "Term: preeclampsia")
+
+p5 <- ggplot(top_5 %>% filter(term == "prostate cancer"), aes(n, fct_reorder(token, n))) +
+  geom_col() +
+  labs(y = "token", title = "Term: prostate cancer")
+             
+grid.arrange(p1, p2, p3, p4, p5, ncol = 2)
+```
+
+The top 5 words for each of the search terms contain the search terms themselves, but other than that the word "disease" appears frequently under the terms prostate cancer, cystic fibrosis, and covid. The word "patient" appears frequently under the terms prostate cancer, meningitis, cystic fibrosis, and covid. 
+
+
 2. Tokenize the abstracts into bigrams. Find the 10 most common bigram and visualize them with ggplot2.
 Calculate the TF-IDF value for each word-search term combination. (here you want the search term to be the “document”) 
+
+```{r top 10 bigrams by tf-idf}
+bigrams <- pm %>%
+  unnest_ngrams(ngram, abstract, n = 2) %>%
+  count(ngram, term, sort = TRUE) %>%
+  bind_tf_idf(ngram, term, n) %>%
+  arrange(desc(tf_idf)) %>%
+  head(10)
+```
+
+
+```{r plot top 10 bigrams by term frequency only}
+bigrams %>%
+  top_n(n, n = 10) %>%
+  ggplot(aes(x = n, y = fct_reorder(ngram, n))) +
+  geom_col() +
+  labs(x = "TF-IDF", y = "Bigram", title = "Top 10 Bigrams Ranked by Term Frequency Only")
+```
+
+
 
 3. What are the 5 tokens from each search term with the highest TF-IDF value? How are the results different from the answers you got in question 1?
