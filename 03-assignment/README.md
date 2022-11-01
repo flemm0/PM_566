@@ -224,6 +224,40 @@ under the terms prostate cancer, cystic fibrosis, and covid. The word
 “patient” appears frequently under the terms prostate cancer,
 meningitis, cystic fibrosis, and covid.
 
+``` r
+top_5 %>%
+    knitr::kable()
+```
+
+| term            | token        |    n |
+|:----------------|:-------------|-----:|
+| covid           | covid        | 7275 |
+| covid           | patients     | 2293 |
+| covid           | disease      |  943 |
+| covid           | pandemic     |  800 |
+| covid           | coronavirus  |  647 |
+| covid           | health       |  647 |
+| cystic fibrosis | fibrosis     |  867 |
+| cystic fibrosis | cystic       |  862 |
+| cystic fibrosis | cf           |  625 |
+| cystic fibrosis | patients     |  586 |
+| cystic fibrosis | disease      |  400 |
+| meningitis      | patients     |  446 |
+| meningitis      | meningitis   |  429 |
+| meningitis      | meningeal    |  219 |
+| meningitis      | csf          |  206 |
+| meningitis      | clinical     |  187 |
+| preeclampsia    | pre          | 2038 |
+| preeclampsia    | eclampsia    | 2005 |
+| preeclampsia    | preeclampsia | 1863 |
+| preeclampsia    | women        | 1196 |
+| preeclampsia    | pregnancy    |  969 |
+| prostate cancer | cancer       | 3840 |
+| prostate cancer | prostate     | 3832 |
+| prostate cancer | patients     |  934 |
+| prostate cancer | treatment    |  926 |
+| prostate cancer | disease      |  652 |
+
 2.  Tokenize the abstracts into bigrams. Find the 10 most common bigram
     and visualize them with ggplot2.
 
@@ -305,3 +339,41 @@ grid.arrange(p1, p2, p3, p4, p5, ncol = 2)
 ```
 
 <img src="README_files/figure-gfm/calculate tf-idf frequency for each word-search term combination-1.png" style="display: block; margin: auto;" />
+
+We can see that by giving weight to words that occur more frequently in
+one group than others, the words “patient” and “disease”, which are
+associated with all five of the terms, have been replaced in the top 5
+most frequent words in each group by words more specific to the term.
+
+``` r
+tf_idf_top_5 %>%
+    knitr::kable()
+```
+
+| token           | term            |    n |        tf |       idf |    tf_idf |
+|:----------------|:----------------|-----:|----------:|----------:|----------:|
+| covid           | covid           | 7275 | 0.0721733 | 1.6094379 | 0.1161585 |
+| pandemic        | covid           |  800 | 0.0079366 | 1.6094379 | 0.0127734 |
+| coronavirus     | covid           |  647 | 0.0064187 | 1.6094379 | 0.0103305 |
+| sars            | covid           |  372 | 0.0036905 | 1.6094379 | 0.0059397 |
+| cov             | covid           |  334 | 0.0033135 | 1.6094379 | 0.0053329 |
+| cf              | cystic fibrosis |  625 | 0.0242089 | 0.9162907 | 0.0221823 |
+| fibrosis        | cystic fibrosis |  867 | 0.0335825 | 0.5108256 | 0.0171548 |
+| cystic          | cystic fibrosis |  862 | 0.0333889 | 0.5108256 | 0.0170559 |
+| cftr            | cystic fibrosis |   86 | 0.0033311 | 1.6094379 | 0.0053613 |
+| sweat           | cystic fibrosis |   83 | 0.0032149 | 1.6094379 | 0.0051742 |
+| meningitis      | meningitis      |  429 | 0.0172462 | 1.6094379 | 0.0277567 |
+| meningeal       | meningitis      |  219 | 0.0088040 | 1.6094379 | 0.0141695 |
+| pachymeningitis | meningitis      |  149 | 0.0059899 | 1.6094379 | 0.0096405 |
+| csf             | meningitis      |  206 | 0.0082814 | 0.9162907 | 0.0075882 |
+| meninges        | meningitis      |  106 | 0.0042613 | 1.6094379 | 0.0068583 |
+| eclampsia       | preeclampsia    | 2005 | 0.0266803 | 1.6094379 | 0.0429403 |
+| preeclampsia    | preeclampsia    | 1863 | 0.0247907 | 1.6094379 | 0.0398992 |
+| pregnancy       | preeclampsia    |  969 | 0.0128944 | 0.5108256 | 0.0065868 |
+| maternal        | preeclampsia    |  797 | 0.0106056 | 0.5108256 | 0.0054176 |
+| gestational     | preeclampsia    |  191 | 0.0025416 | 1.6094379 | 0.0040906 |
+| prostate        | prostate cancer | 3832 | 0.0576943 | 1.6094379 | 0.0928554 |
+| androgen        | prostate cancer |  305 | 0.0045921 | 1.6094379 | 0.0073906 |
+| psa             | prostate cancer |  282 | 0.0042458 | 1.6094379 | 0.0068333 |
+| prostatectomy   | prostate cancer |  215 | 0.0032370 | 1.6094379 | 0.0052098 |
+| castration      | prostate cancer |  148 | 0.0022283 | 1.6094379 | 0.0035863 |

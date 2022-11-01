@@ -218,6 +218,11 @@ grid.arrange(p1, p2, p3, p4, p5, ncol = 2)
 
 The top 5 words for each of the search terms contain the search terms themselves, but other than that the word "disease" appears frequently under the terms prostate cancer, cystic fibrosis, and covid. The word "patient" appears frequently under the terms prostate cancer, meningitis, cystic fibrosis, and covid. 
 
+```{r table output for top 5 tokens for each term}
+top_5 %>%
+  knitr::kable()
+```
+
 
 2. Tokenize the abstracts into bigrams. Find the 10 most common bigram and visualize them with ggplot2.
 
@@ -291,3 +296,11 @@ p5 <- ggplot(tf_idf_top_5 %>% filter(term == "prostate cancer"), aes(tf_idf, fct
 grid.arrange(p1, p2, p3, p4, p5, ncol = 2)
 
 ```
+
+We can see that by giving weight to words that occur more frequently in one group than others, the words "patient" and "disease", which are associated with all five of the terms, have been replaced in the top 5 most frequent words in each group by words more specific to the term.
+
+```{r table output for top 5 tokens by tf_idf}
+tf_idf_top_5 %>%
+  knitr::kable()
+```
+
