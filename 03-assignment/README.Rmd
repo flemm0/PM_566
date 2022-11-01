@@ -9,7 +9,7 @@ always_allow_html: true
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE, cache = TRUE)
 knitr::opts_chunk$set(tidy.opts = list(width.cutoff = 60), tidy = TRUE)
-setwd("~/Desktop/PM566/GitHub/03-assignment")
+#setwd("~/Desktop/PM566/GitHub/03-assignment")
 rm(list=ls())
 ```
 
@@ -147,7 +147,7 @@ head(df, n = 3) %>%
 
 ### Text Mining
 
-A new dataset has been added to the data science data repository (https://github.com/USCbiostats/data-science-data/tree/master/03_pubmed)[https://github.com/USCbiostats/data-science-data/tree/master/03_pubmed]. The dataset contains 3241 abstracts from articles across 5 search terms. Your job is to analyse these abstracts to find interesting insights.
+A new dataset has been added to the data science data repository [https://github.com/USCbiostats/data-science-data/tree/master/03_pubmed](https://github.com/USCbiostats/data-science-data/tree/master/03_pubmed). The dataset contains 3241 abstracts from articles across 5 search terms. Your job is to analyse these abstracts to find interesting insights.
 
 1. Tokenize the abstracts and count the number of each token. Do you see anything interesting? Does removing stop words change what tokens appear as the most frequent? What are the 5 most common tokens for each search term after removing stopwords?
 
@@ -174,7 +174,7 @@ pm %>%
   anti_join(stop_words, by = c("token" = "word")) %>%
   filter( !grepl(pattern = "^[0-9]+$", x = token)) %>%
   count(token, sort = TRUE) %>%
-  top_n(n = 30) %>%
+  top_n(n = 20) %>%
   ggplot(aes(x = n, y = fct_reorder(token, n))) +
   geom_col() +
   labs(y = "Token", title = "Top 20 Most Frequent Words in PubMed Data Set (Stop Words and Numbers Removed)") + 
@@ -190,7 +190,7 @@ top_5 <- pm %>%
   filter(!grepl(pattern = "^[0-9]+$", x = token)) %>%
   group_by(term) %>%
   count(token, sort = TRUE) %>%
-  top_n(5) %>%
+  top_n(n, n = 5) %>%
   arrange(term)
 
 p1 <- ggplot(top_5 %>% filter(term == "covid"), aes(n, fct_reorder(token, n))) +
@@ -221,7 +221,7 @@ The top 5 words for each of the search terms contain the search terms themselves
 
 2. Tokenize the abstracts into bigrams. Find the 10 most common bigram and visualize them with ggplot2.
 
-```{r top 10 bigrams by tf-idf}
+```{r top 10 bigrams}
 pm %>%
   unnest_ngrams(bigram, abstract, n = 2) %>%
   count(bigram, sort = TRUE) %>%
@@ -232,7 +232,27 @@ pm %>%
   theme_classic()
 ```
 
+All but two of the bigrams in the top 10 contain stop words, making the graph above not very useful in describing the text in the data set. I will remove them along with numbers and visualize again.
 
+```{r top 10 bigrams after removing stop words}
+pm %>%
+  unnest_ngrams(bigram, abstract, n = 2) %>%
+  separate(bigram, into = c("word1", "word2"), sep = " ") %>%
+  anti_join(stop_words, by = c("word1" = "word")) %>%
+  anti_join(stop_words, by = c("word2" = "word")) %>%
+  filter(!grepl(pattern = "^[0-9]+$", x = word1)) %>%
+  filter(!grepl(pattern = "^[0-9]+$", x = word2)) %>%
+  unite(bigram, c("word1", "word2"), sep = " ") %>%
+  count(bigram, sort = TRUE) %>%
+  top_n(10, n) %>%
+  ggplot(aes(x = n, y = fct_reorder(bigram, n))) +
+  geom_col() +
+  labs(y = "bigram", title = "Top 10 Most Common Bigrams in PubMed Data Set (Stop Words Removed)") +
+  theme_classic() + 
+  theme(plot.title = element_text(size = 10))
+```
+
+Now the graph better describes the text data. Above, we can see health-related bigrams such as "prostate cancer" and "pre eclampsia" are common terms in the data set.
 
 
 3. Calculate the TF-IDF value for each word-search term combination. (here you want the search term to be the “document”) What are the 5 tokens from each search term with the highest TF-IDF value? How are the results different from the answers you got in question 1?
