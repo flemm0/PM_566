@@ -93,15 +93,16 @@ name equals ‘WILLIAMS’ or ‘DAVIS’.
 ``` sql
 SELECT actor_id, first_name, last_name
 FROM actor
-WHERE last_name IN ('WILLIAMS', 'DAVIS');
+WHERE last_name IN ('WILLIAMS', 'DAVIS')
+ORDER BY last_name;
 ```
 
 | actor_id | first_name | last_name |
 |---------:|:-----------|:----------|
 |        4 | JENNIFER   | DAVIS     |
-|       72 | SEAN       | WILLIAMS  |
 |      101 | SUSAN      | DAVIS     |
 |      110 | SUSAN      | DAVIS     |
+|       72 | SEAN       | WILLIAMS  |
 |      137 | MORGAN     | WILLIAMS  |
 |      172 | GROUCHO    | WILLIAMS  |
 
@@ -117,7 +118,7 @@ component). Include a single row for each distinct customer ID.
 ``` sql
 -- PRAGMA table_info(rental)
 
-SELECT customer_id
+SELECT DISTINCT customer_id
 FROM rental
 WHERE DATE(rental_date) = '2005-07-05';
 ```
@@ -223,18 +224,18 @@ Retrieve all the payment IDs and their amount from the customers whose
 last name is ‘DAVIS’.
 
 ``` sql
-SELECT p.payment_id, p.amount
+SELECT c.customer_id, c.last_name, p.payment_id, p.amount
 FROM payment p
-JOIN customer c
+INNER JOIN customer c
 ON p.customer_id = c.customer_id
 WHERE c.last_name LIKE 'DAVIS';
 ```
 
-| payment_id | amount |
-|:-----------|-------:|
-| 16685      |   4.99 |
-| 16686      |   2.99 |
-| 16687      |   0.99 |
+| customer_id | last_name | payment_id | amount |
+|------------:|:----------|-----------:|-------:|
+|           6 | DAVIS     |      16685 |   4.99 |
+|           6 | DAVIS     |      16686 |   2.99 |
+|           6 | DAVIS     |      16687 |   0.99 |
 
 3 records
 
@@ -336,13 +337,17 @@ The following query calculates a number of summary statistics for the
 payment table using MAX, MIN, AVG and SUM
 
 ``` sql
-SELECT MAX(amount), MIN(amount), AVG(amount), SUM(amount)
+SELECT MAX(amount) max_payment, 
+       MIN(amount) min_payment, 
+       AVG(amount) avg_payment, 
+       SUM(amount) total_payment,
+       COUNT(*) num_payments
 FROM payment;
 ```
 
-| MAX(amount) | MIN(amount) | AVG(amount) | SUM(amount) |
-|------------:|------------:|------------:|------------:|
-|       11.99 |        0.99 |    4.169775 |     4824.43 |
+| max_payment | min_payment | avg_payment | total_payment | num_payments |
+|------------:|------------:|------------:|--------------:|-------------:|
+|       11.99 |        0.99 |    4.169775 |       4824.43 |         1157 |
 
 1 records
 
@@ -351,23 +356,28 @@ FROM payment;
 Modify the above query to do those calculations for each customer_id
 
 ``` sql
-SELECT customer_id, MAX(amount), MIN(amount), AVG(amount), SUM(amount)
+SELECT customer_id, 
+       MAX(amount) max_payment, 
+       MIN(amount) min_payment, 
+       AVG(amount) avg_payment, 
+       SUM(amount) total_payment,
+       COUNT(*) num_payments
 FROM payment
 GROUP BY customer_id;
 ```
 
-| customer_id | MAX(amount) | MIN(amount) | AVG(amount) | SUM(amount) |
-|------------:|------------:|------------:|------------:|------------:|
-|           1 |        2.99 |        0.99 |    1.990000 |        3.98 |
-|           2 |        4.99 |        4.99 |    4.990000 |        4.99 |
-|           3 |        2.99 |        1.99 |    2.490000 |        4.98 |
-|           5 |        6.99 |        0.99 |    3.323333 |        9.97 |
-|           6 |        4.99 |        0.99 |    2.990000 |        8.97 |
-|           7 |        5.99 |        0.99 |    4.190000 |       20.95 |
-|           8 |        6.99 |        6.99 |    6.990000 |        6.99 |
-|           9 |        4.99 |        0.99 |    3.656667 |       10.97 |
-|          10 |        4.99 |        4.99 |    4.990000 |        4.99 |
-|          11 |        6.99 |        6.99 |    6.990000 |        6.99 |
+| customer_id | max_payment | min_payment | avg_payment | total_payment | num_payments |
+|------------:|------------:|------------:|------------:|--------------:|-------------:|
+|           1 |        2.99 |        0.99 |    1.990000 |          3.98 |            2 |
+|           2 |        4.99 |        4.99 |    4.990000 |          4.99 |            1 |
+|           3 |        2.99 |        1.99 |    2.490000 |          4.98 |            2 |
+|           5 |        6.99 |        0.99 |    3.323333 |          9.97 |            3 |
+|           6 |        4.99 |        0.99 |    2.990000 |          8.97 |            3 |
+|           7 |        5.99 |        0.99 |    4.190000 |         20.95 |            5 |
+|           8 |        6.99 |        6.99 |    6.990000 |          6.99 |            1 |
+|           9 |        4.99 |        0.99 |    3.656667 |         10.97 |            3 |
+|          10 |        4.99 |        4.99 |    4.990000 |          4.99 |            1 |
+|          11 |        6.99 |        6.99 |    6.990000 |          6.99 |            1 |
 
 Displaying records 1 - 10
 
@@ -377,24 +387,29 @@ Modify the above query to only keep the customer_ids that have more then
 5 payments
 
 ``` sql
-SELECT customer_id, MAX(amount), MIN(amount), AVG(amount), SUM(amount)
+SELECT customer_id, 
+       MAX(amount) max_payment, 
+       MIN(amount) min_payment, 
+       AVG(amount) avg_payment, 
+       SUM(amount) total_payment,
+       COUNT(*) num_payments
 FROM payment
 GROUP BY customer_id
-HAVING COUNT(*) > 5;
+HAVING num_payments > 5;
 ```
 
-| customer_id | MAX(amount) | MIN(amount) | AVG(amount) | SUM(amount) |
-|------------:|------------:|------------:|------------:|------------:|
-|          19 |        9.99 |        0.99 |    4.490000 |       26.94 |
-|          53 |        9.99 |        0.99 |    4.490000 |       26.94 |
-|         109 |        7.99 |        0.99 |    3.990000 |       27.93 |
-|         161 |        5.99 |        0.99 |    2.990000 |       17.94 |
-|         197 |        3.99 |        0.99 |    2.615000 |       20.92 |
-|         207 |        6.99 |        0.99 |    2.990000 |       17.94 |
-|         239 |        7.99 |        2.99 |    5.656667 |       33.94 |
-|         245 |        8.99 |        0.99 |    4.823333 |       28.94 |
-|         251 |        4.99 |        1.99 |    3.323333 |       19.94 |
-|         269 |        6.99 |        0.99 |    3.156667 |       18.94 |
+| customer_id | max_payment | min_payment | avg_payment | total_payment | num_payments |
+|------------:|------------:|------------:|------------:|--------------:|-------------:|
+|          19 |        9.99 |        0.99 |    4.490000 |         26.94 |            6 |
+|          53 |        9.99 |        0.99 |    4.490000 |         26.94 |            6 |
+|         109 |        7.99 |        0.99 |    3.990000 |         27.93 |            7 |
+|         161 |        5.99 |        0.99 |    2.990000 |         17.94 |            6 |
+|         197 |        3.99 |        0.99 |    2.615000 |         20.92 |            8 |
+|         207 |        6.99 |        0.99 |    2.990000 |         17.94 |            6 |
+|         239 |        7.99 |        2.99 |    5.656667 |         33.94 |            6 |
+|         245 |        8.99 |        0.99 |    4.823333 |         28.94 |            6 |
+|         251 |        4.99 |        1.99 |    3.323333 |         19.94 |            6 |
+|         269 |        6.99 |        0.99 |    3.156667 |         18.94 |            6 |
 
 Displaying records 1 - 10
 

@@ -10,6 +10,7 @@ always_allow_html: true
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 knitr::opts_chunk$set(tidy.opts = list(width.cutoff = 60), tidy = TRUE)
+#options(repos = c(CRAN = "http://cran.rstudio.com"))
 rm(list=ls())
 ```
 
@@ -69,7 +70,8 @@ Retrieve the actor ID, first name, and last name for actors whose last name equa
 ```{sql connection=con}
 SELECT actor_id, first_name, last_name
 FROM actor
-WHERE last_name IN ('WILLIAMS', 'DAVIS');
+WHERE last_name IN ('WILLIAMS', 'DAVIS')
+ORDER BY last_name;
 ```
 
 
@@ -78,7 +80,7 @@ Write a query against the rental table that returns the IDs of the customers who
 ```{sql connection=con}
 -- PRAGMA table_info(rental)
 
-SELECT customer_id
+SELECT DISTINCT customer_id
 FROM rental
 WHERE DATE(rental_date) = '2005-07-05';
 ```
@@ -117,9 +119,9 @@ WHERE amount BETWEEN 5 AND 8;
 Retrieve all the payment IDs and their amount from the customers whose last name is ‘DAVIS’.
 
 ```{sql connection=con}
-SELECT p.payment_id, p.amount
+SELECT c.customer_id, c.last_name, p.payment_id, p.amount
 FROM payment p
-JOIN customer c
+INNER JOIN customer c
 ON p.customer_id = c.customer_id
 WHERE c.last_name LIKE 'DAVIS';
 ```
@@ -163,14 +165,23 @@ ORDER BY num_rentals DESC;
 ## Exercise 7
 The following query calculates a number of summary statistics for the payment table using MAX, MIN, AVG and SUM
 ```{sql connection=con}
-SELECT MAX(amount), MIN(amount), AVG(amount), SUM(amount)
+SELECT MAX(amount) max_payment, 
+       MIN(amount) min_payment, 
+       AVG(amount) avg_payment, 
+       SUM(amount) total_payment,
+       COUNT(*) num_payments
 FROM payment;
 ```
 
 ### Exercise 7.1
 Modify the above query to do those calculations for each customer_id
 ```{sql connection=con}
-SELECT customer_id, MAX(amount), MIN(amount), AVG(amount), SUM(amount)
+SELECT customer_id, 
+       MAX(amount) max_payment, 
+       MIN(amount) min_payment, 
+       AVG(amount) avg_payment, 
+       SUM(amount) total_payment,
+       COUNT(*) num_payments
 FROM payment
 GROUP BY customer_id;
 ```
@@ -178,10 +189,15 @@ GROUP BY customer_id;
 ### Exercise 7.2
 Modify the above query to only keep the customer_ids that have more then 5 payments
 ```{sql connection=con}
-SELECT customer_id, MAX(amount), MIN(amount), AVG(amount), SUM(amount)
+SELECT customer_id, 
+       MAX(amount) max_payment, 
+       MIN(amount) min_payment, 
+       AVG(amount) avg_payment, 
+       SUM(amount) total_payment,
+       COUNT(*) num_payments
 FROM payment
 GROUP BY customer_id
-HAVING COUNT(*) > 5;
+HAVING num_payments > 5;
 ```
 
 ## Cleanup
