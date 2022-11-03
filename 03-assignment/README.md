@@ -1,7 +1,7 @@
 Assignment 03: Web Scraping and Text Mining
 ================
 Flemming Wu
-2022-10-31
+2022-11-03
 
 ``` r
 library(httr)
@@ -40,28 +40,26 @@ require(gridExtra)
 ``` r
 # using rvest
 count1 <- rvest::read_html("https://pubmed.ncbi.nlm.nih.gov/?term=sars-cov-2+trial+vaccine") %>%
-    html_node(xpath = "/html/body/main/div[9]/div[2]/div[2]/div[1]/div[1]") %>%
-    as.character() %>%
-    str_extract_all("([:digit:]{1,3},)+?[:digit:]{3}")
+    rvest::html_nodes(xpath = "/html/body/main/div[9]/div[2]/div[2]/div[1]/div[1]") %>%
+    html_text2() %>%
+    str_extract("([:digit:]{1,3},)+?[:digit:]{3}")
 
-paste0("I have found ", count1[[1]], " papers that show up under the term: sars-cov-2 trial vaccine using rvest")
+paste0("I have found ", count1, " papers that show up under the term: sars-cov-2 trial vaccine using rvest")
 ```
 
-    ## [1] "I have found 3,996 papers that show up under the term: sars-cov-2 trial vaccine using rvest"
+    ## [1] "I have found 4,007 papers that show up under the term: sars-cov-2 trial vaccine using rvest"
 
 ``` r
 # using xml2
-website <- xml2::read_html("https://pubmed.ncbi.nlm.nih.gov/?term=sars-cov-2+trial+vaccine")
-
-count2 <- xml2::xml_find_first(website, xpath = "/html/body/main/div[9]/div[2]/div[2]/div[1]/div[1]") %>%
+count2 <- xml2::read_html("https://pubmed.ncbi.nlm.nih.gov/?term=sars-cov-2+trial+vaccine") %>%
+    xml2::xml_find_first(xpath = "/html/body/main/div[9]/div[2]/div[2]/div[1]/div[1]") %>%
     as.character() %>%
     str_extract("([:digit:]{1,3},)+?[:digit:]{3}")
-
 
 paste0("I have found ", count2, " papers that show up under the term: sars-cov-2 trial vaccine using xml2")
 ```
 
-    ## [1] "I have found 3,996 papers that show up under the term: sars-cov-2 trial vaccine using xml2"
+    ## [1] "I have found 4,007 papers that show up under the term: sars-cov-2 trial vaccine using xml2"
 
 ``` r
 # get list of ID numbers
