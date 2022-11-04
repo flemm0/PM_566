@@ -41,7 +41,7 @@ require(gridExtra)
 # using rvest
 count1 <- rvest::read_html("https://pubmed.ncbi.nlm.nih.gov/?term=sars-cov-2+trial+vaccine") %>%
     rvest::html_nodes(xpath = "/html/body/main/div[9]/div[2]/div[2]/div[1]/div[1]") %>%
-    html_text2() %>%
+    rvest::html_text2() %>%
     str_extract("([:digit:]{1,3},)+?[:digit:]{3}")
 
 paste0("I have found ", count1, " papers that show up under the term: sars-cov-2 trial vaccine using rvest")
@@ -71,9 +71,11 @@ query_ids <- GET(
 )
 
 # Extracting the content of the response of GET
-ids <- httr::content(query_ids) %>% as.character()
+ids <- httr::content(query_ids) %>% 
+  rvest::html_elements("Id") %>%
+  as.character() %>%
+  str_extract("[:digit:]+")
 
-ids <- stringr::str_extract_all(ids, "<Id>[:digit:]*</Id>")[[1]] %>% stringr::str_remove_all("</?Id>")
 
 publications <- GET(
   url   = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi", # the link now will be using efetch, instead of esearch
