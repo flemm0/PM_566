@@ -164,6 +164,8 @@ There is nothing particularly interesting about the most frequent words
 in the abstract texts, as most of them contain stop words. Some of the
 non-stop words include “patients”, “cancer”, and “covid”.
 
+Removing stop words:
+
 ``` r
 pm %>%
     unnest_tokens(token, abstract) %>%
@@ -258,7 +260,7 @@ top_5 %>%
 | prostate cancer | treatment    |  926 |
 | prostate cancer | disease      |  652 |
 
-2.  Tokenize the abstracts into bigrams. Find the 10 most common bigram
+2.  Tokenize the abstracts into bigrams. Find the 10 most common bigrams
     and visualize them with ggplot2.
 
 ``` r
@@ -296,8 +298,8 @@ pm %>%
 ![](README_files/figure-gfm/top%2010%20bigrams%20after%20removing%20stop%20words-1.png)<!-- -->
 
 Now the graph better describes the text data. Above, we can see
-health-related bigrams such as “prostate cancer” and “pre eclampsia” are
-common terms in the data set.
+health-related bigrams such as “prostate cancer”, “coronavirus disease”
+and “pre eclampsia” are common terms in the data set.
 
 3.  Calculate the TF-IDF value for each word-search term combination.
     (here you want the search term to be the “document”) What are the 5
