@@ -1,7 +1,14 @@
 Assignment 04: HPC and SQL
 ================
 Flemming Wu
-2022-11-08
+2022-11-11
+
+``` r
+library(microbenchmark)
+library(parallel)
+library(RSQLite)
+library(DBI)
+```
 
 The learning objectives are to conduct data scraping and perform text
 mining.
@@ -25,7 +32,7 @@ fun1 <- function(mat) {
 }
 
 fun1alt <- function(mat) {
-    # YOUR CODE HERE
+    rowSums(mat)
 }
 
 # Cumulative sum by row
@@ -42,7 +49,7 @@ fun2 <- function(mat) {
 }
 
 fun2alt <- function(mat) {
-    # YOUR CODE HERE
+    t(apply(dat, 1, cumsum))
 }
 
 
@@ -51,13 +58,27 @@ set.seed(2315)
 dat <- matrix(rnorm(200 * 100), nrow = 200)
 
 # Test for the first
-microbenchmark::microbenchmark(fun1(dat), fun1alt(dat), unit = "relative",
+mb1 <- microbenchmark::microbenchmark(fun1(dat), fun1alt(dat),
     check = "equivalent")
 
-# Test for the second
-microbenchmark::microbenchmark(fun2(dat), fun2alt(dat), unit = "relative",
-    check = "equivalent")
+summary(mb1, unit = "relative")
 ```
+
+    ##           expr      min       lq     mean   median       uq      max neval
+    ## 1    fun1(dat) 10.09055 10.90379 8.875725 11.07075 11.18314 1.269682   100
+    ## 2 fun1alt(dat)  1.00000  1.00000 1.000000  1.00000  1.00000 1.000000   100
+
+``` r
+# Test for the second
+mb2 <- microbenchmark::microbenchmark(fun2(dat), fun2alt(dat),
+    check = "equivalent")
+
+summary(mb2, unit = "relative")
+```
+
+    ##           expr      min       lq     mean   median       uq      max neval
+    ## 1    fun2(dat) 3.776878 2.792448 2.329214 2.569832 2.299975 1.155387   100
+    ## 2 fun2alt(dat) 1.000000 1.000000 1.000000 1.000000 1.000000 1.000000   100
 
 The last argument, check = “equivalent”, is included to make sure that
 the functions return the same result.
@@ -77,6 +98,8 @@ set.seed(156)
 sim_pi(1000)  # 3.132
 ```
 
+    ## [1] 3.132
+
 In order to get accurate estimates, we can run this function multiple
 time, with the following code:
 
@@ -89,6 +112,11 @@ system.time({
     print(mean(ans))
 })
 ```
+
+    ## [1] 3.14124
+
+    ##    user  system elapsed 
+    ##   4.980   1.671   7.551
 
 Rewrite the previous code using `parLapply()` to make it run faster.
 Make sure you set the seed using `clusterSetRNGStream()`:
@@ -136,6 +164,29 @@ inner join. Read more about them here
 
 How many many movies is there available in each rating category.
 
+``` sql
+SELECT name, COUNT(*) num_films
+FROM film_category f
+LEFT JOIN category c
+ON f.category_id = c.category_id
+GROUP BY name
+```
+
+| name        | num_films |
+|:------------|----------:|
+| Action      |        64 |
+| Animation   |        66 |
+| Children    |        60 |
+| Classics    |        57 |
+| Comedy      |        58 |
+| Documentary |        68 |
+| Drama       |        62 |
+| Family      |        69 |
+| Foreign     |        73 |
+| Games       |        61 |
+
+Displaying records 1 - 10
+
 ### Question 2
 
 What is the average replacement cost and rental rate for each rating
@@ -150,3 +201,7 @@ there are with each category ID
 
 Incorporate table category into the answer to the previous question to
 find the name of the most popular category.
+
+``` r
+dbDisconnect(con)
+```
