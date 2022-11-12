@@ -57,7 +57,7 @@ fun2 <- function(mat) {
 }
 
 fun2alt <- function(mat) {
-  t(apply(dat, 1, cumsum))
+  t(apply(mat, 1, cumsum))
 }
 
 

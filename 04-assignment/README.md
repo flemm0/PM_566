@@ -49,7 +49,7 @@ fun2 <- function(mat) {
 }
 
 fun2alt <- function(mat) {
-    t(apply(dat, 1, cumsum))
+    t(apply(mat, 1, cumsum))
 }
 
 
@@ -64,9 +64,9 @@ mb1 <- microbenchmark::microbenchmark(fun1(dat), fun1alt(dat),
 summary(mb1, unit = "relative")
 ```
 
-    ##           expr      min       lq     mean   median       uq       max neval
-    ## 1    fun1(dat) 4.190377 5.226708 4.426075 5.306122 5.404234 0.3897123   100
-    ## 2 fun1alt(dat) 1.000000 1.000000 1.000000 1.000000 1.000000 1.0000000   100
+    ##           expr      min       lq    mean   median       uq      max neval
+    ## 1    fun1(dat) 8.818385 10.39966 8.45405 10.29185 10.42869 1.151231   100
+    ## 2 fun1alt(dat) 1.000000  1.00000 1.00000  1.00000  1.00000 1.000000   100
 
 ``` r
 # Test for the second
@@ -76,9 +76,9 @@ mb2 <- microbenchmark::microbenchmark(fun2(dat), fun2alt(dat),
 summary(mb2, unit = "relative")
 ```
 
-    ##           expr      min       lq     mean   median       uq       max neval
-    ## 1    fun2(dat) 4.813563 3.851131 2.876692 3.646401 3.415992 0.3087933   100
-    ## 2 fun2alt(dat) 1.000000 1.000000 1.000000 1.000000 1.000000 1.0000000   100
+    ##           expr      min       lq    mean   median      uq      max neval
+    ## 1    fun2(dat) 4.151755 3.010849 2.72494 2.648056 2.63657 4.838463   100
+    ## 2 fun2alt(dat) 1.000000 1.000000 1.00000 1.000000 1.00000 1.000000   100
 
 The last argument, check = “equivalent”, is included to make sure that
 the functions return the same result.
@@ -116,7 +116,7 @@ system.time({
     ## [1] 3.14124
 
     ##    user  system elapsed 
-    ##    1.47    0.59    2.19
+    ##   4.344   0.973   5.369
 
 Rewrite the previous code using `parLapply()` to make it run faster.
 Make sure you set the seed using `clusterSetRNGStream()`:
@@ -133,22 +133,10 @@ clusterEvalQ(cl, {
 ```
 
     ## [[1]]
-    ## [1] "Hello from process #14892"
+    ## [1] "Hello from process #33766"
     ## 
     ## [[2]]
-    ## [1] "Hello from process #7536"
-    ## 
-    ## [[3]]
-    ## [1] "Hello from process #16888"
-    ## 
-    ## [[4]]
-    ## [1] "Hello from process #26528"
-    ## 
-    ## [[5]]
-    ## [1] "Hello from process #18428"
-    ## 
-    ## [[6]]
-    ## [1] "Hello from process #21432"
+    ## [1] "Hello from process #33765"
 
 ``` r
 system.time({
@@ -159,10 +147,10 @@ system.time({
 })
 ```
 
-    ## [1] 3.141734
+    ## [1] 3.141577
 
     ##    user  system elapsed 
-    ##    0.00    0.00    0.91
+    ##   0.005   0.001   2.767
 
 ## SQL
 
