@@ -64,9 +64,9 @@ mb1 <- microbenchmark::microbenchmark(fun1(dat), fun1alt(dat),
 summary(mb1, unit = "relative")
 ```
 
-    ##           expr      min       lq     mean   median       uq      max neval
-    ## 1    fun1(dat) 10.09055 10.90379 8.875725 11.07075 11.18314 1.269682   100
-    ## 2 fun1alt(dat)  1.00000  1.00000 1.000000  1.00000  1.00000 1.000000   100
+    ##           expr      min       lq     mean   median       uq       max neval
+    ## 1    fun1(dat) 4.190377 5.226708 4.426075 5.306122 5.404234 0.3897123   100
+    ## 2 fun1alt(dat) 1.000000 1.000000 1.000000 1.000000 1.000000 1.0000000   100
 
 ``` r
 # Test for the second
@@ -76,9 +76,9 @@ mb2 <- microbenchmark::microbenchmark(fun2(dat), fun2alt(dat),
 summary(mb2, unit = "relative")
 ```
 
-    ##           expr      min       lq     mean   median       uq      max neval
-    ## 1    fun2(dat) 3.776878 2.792448 2.329214 2.569832 2.299975 1.155387   100
-    ## 2 fun2alt(dat) 1.000000 1.000000 1.000000 1.000000 1.000000 1.000000   100
+    ##           expr      min       lq     mean   median       uq       max neval
+    ## 1    fun2(dat) 4.813563 3.851131 2.876692 3.646401 3.415992 0.3087933   100
+    ## 2 fun2alt(dat) 1.000000 1.000000 1.000000 1.000000 1.000000 1.0000000   100
 
 The last argument, check = “equivalent”, is included to make sure that
 the functions return the same result.
@@ -116,20 +116,53 @@ system.time({
     ## [1] 3.14124
 
     ##    user  system elapsed 
-    ##   4.980   1.671   7.551
+    ##    1.47    0.59    2.19
 
 Rewrite the previous code using `parLapply()` to make it run faster.
 Make sure you set the seed using `clusterSetRNGStream()`:
 
 ``` r
-# YOUR CODE HERE
-system.time({
-  # YOUR CODE HERE
-  ans <- # YOUR CODE HERE
-  print(mean(ans))
-  # YOUR CODE HERE
+n.cores <- detectCores()/2
+cl <- makePSOCKcluster(n.cores)  # give half of the detected cores to the cluster
+
+clusterSetRNGStream(cl, 1231)  # set seed
+
+clusterEvalQ(cl, {
+    paste0("Hello from process #", Sys.getpid())
 })
 ```
+
+    ## [[1]]
+    ## [1] "Hello from process #14892"
+    ## 
+    ## [[2]]
+    ## [1] "Hello from process #7536"
+    ## 
+    ## [[3]]
+    ## [1] "Hello from process #16888"
+    ## 
+    ## [[4]]
+    ## [1] "Hello from process #26528"
+    ## 
+    ## [[5]]
+    ## [1] "Hello from process #18428"
+    ## 
+    ## [[6]]
+    ## [1] "Hello from process #21432"
+
+``` r
+system.time({
+    clusterExport(cl, "sim_pi")
+    ans <- unlist(parLapply(cl, 1:4000, sim_pi, n = 10000))
+    print(mean(ans))
+    stopCluster(cl)
+})
+```
+
+    ## [1] 3.141734
+
+    ##    user  system elapsed 
+    ##    0.00    0.00    0.91
 
 ## SQL
 
@@ -165,42 +198,98 @@ inner join. Read more about them here
 How many many movies is there available in each rating category.
 
 ``` sql
-SELECT name, COUNT(*) num_films
-FROM film_category f
-LEFT JOIN category c
-ON f.category_id = c.category_id
-GROUP BY name
+SELECT rating, COUNT(rating) num_films  
+FROM film
+GROUP BY rating
+ORDER BY num_films DESC
 ```
 
-| name        | num_films |
-|:------------|----------:|
-| Action      |        64 |
-| Animation   |        66 |
-| Children    |        60 |
-| Classics    |        57 |
-| Comedy      |        58 |
-| Documentary |        68 |
-| Drama       |        62 |
-| Family      |        69 |
-| Foreign     |        73 |
-| Games       |        61 |
+| rating | num_films |
+|:-------|----------:|
+| PG-13  |       223 |
+| NC-17  |       210 |
+| R      |       195 |
+| PG     |       194 |
+| G      |       180 |
 
-Displaying records 1 - 10
+5 records
 
 ### Question 2
 
 What is the average replacement cost and rental rate for each rating
 category.
 
+``` sql
+
+
+SELECT c.name rating_cat, AVG(replacement_cost) avg_repl_cost, AVG(rental_rate) avg_rent_rate
+FROM film f
+JOIN film_category fc
+ON f.film_id = fc.film_id
+JOIN category c
+ON fc.category_id = c.category_id
+GROUP BY c.name
+ORDER BY avg_repl_cost DESC, avg_rent_rate DESC
+```
+
+| rating_cat | avg_repl_cost | avg_rent_rate |
+|:-----------|--------------:|--------------:|
+| Sci-Fi     |      21.15393 |      3.219508 |
+| Drama      |      21.08677 |      3.022258 |
+| Classics   |      21.00754 |      2.744386 |
+| Action     |      20.91187 |      2.646250 |
+| Sports     |      20.39541 |      3.125135 |
+| Games      |      20.28508 |      3.252295 |
+| Animation  |      20.12636 |      2.808182 |
+| Children   |      20.05667 |      2.890000 |
+| Horror     |      19.86500 |      3.025714 |
+| Family     |      19.72913 |      2.758116 |
+
+Displaying records 1 - 10
+
 ### Question 3
 
 Use table film_category together with film to find the how many films
 there are with each category ID
 
+``` sql
+SELECT fc.category_id, COUNT(*) num_films
+FROM film_category fc
+JOIN film f
+ON fc.film_id = f.film_id
+GROUP BY fc.category_id
+```
+
+| category_id | num_films |
+|:------------|----------:|
+| 1           |        64 |
+| 2           |        66 |
+| 3           |        60 |
+| 4           |        57 |
+| 5           |        58 |
+| 6           |        68 |
+| 7           |        62 |
+| 8           |        69 |
+| 9           |        73 |
+| 10          |        61 |
+
+Displaying records 1 - 10
+
 ### Question 4
 
 Incorporate table category into the answer to the previous question to
 find the name of the most popular category.
+
+``` sql
+SELECT fc.category_id, c.name category, COUNT(*) num_films
+FROM film_category fc
+JOIN film f
+ON fc.film_id = f.film_id
+LEFT JOIN category c
+ON fc.category_id = c.category_id
+GROUP BY fc.category_id
+ORDER BY num_films DESC
+```
 
 ``` r
 dbDisconnect(con)
