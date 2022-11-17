@@ -66,17 +66,17 @@ mb2 <- microbenchmark::microbenchmark(fun2(dat), fun2alt(dat),
 summary(mb1, unit = "relative")
 ```
 
-    ##           expr      min       lq     mean   median       uq       max neval
-    ## 1    fun1(dat) 8.273434 10.83372 8.273598 10.74167 10.26966 0.7036185   100
-    ## 2 fun1alt(dat) 1.000000  1.00000 1.000000  1.00000  1.00000 1.0000000   100
+    ##           expr      min      lq     mean  median       uq       max neval
+    ## 1    fun1(dat) 8.273028 10.8592 8.379098 10.8335 10.28461 0.7280283   100
+    ## 2 fun1alt(dat) 1.000000  1.0000 1.000000  1.0000  1.00000 1.0000000   100
 
 ``` r
 summary(mb2, unit = "relative")
 ```
 
-    ##           expr      min      lq     mean   median       uq       max neval
-    ## 1    fun2(dat) 4.444672 2.50878 1.843788 2.506481 1.887776 0.3278704   100
-    ## 2 fun2alt(dat) 1.000000 1.00000 1.000000 1.000000 1.000000 1.0000000   100
+    ##           expr      min       lq    mean   median       uq       max neval
+    ## 1    fun2(dat) 4.044125 2.472166 1.87645 2.386436 2.184968 0.2772443   100
+    ## 2 fun2alt(dat) 1.000000 1.000000 1.00000 1.000000 1.000000 1.0000000   100
 
 The last argument, check = “equivalent”, is included to make sure that
 the functions return the same result.
@@ -114,7 +114,7 @@ system.time({
     ## [1] 3.14124
 
     ##    user  system elapsed 
-    ##   4.514   1.122   5.705
+    ##   4.503   1.147   5.746
 
 Rewrite the previous code using `parLapply()` to make it run faster.
 Make sure you set the seed using `clusterSetRNGStream()`:
@@ -131,16 +131,16 @@ clusterEvalQ(cl, {
 ```
 
     ## [[1]]
-    ## [1] "Hello from process #27768"
+    ## [1] "Hello from process #28087"
     ## 
     ## [[2]]
-    ## [1] "Hello from process #27769"
+    ## [1] "Hello from process #28088"
     ## 
     ## [[3]]
-    ## [1] "Hello from process #27770"
+    ## [1] "Hello from process #28086"
     ## 
     ## [[4]]
-    ## [1] "Hello from process #27767"
+    ## [1] "Hello from process #28089"
 
 ``` r
 system.time({
@@ -154,7 +154,7 @@ system.time({
     ## [1] 3.141578
 
     ##    user  system elapsed 
-    ##   0.008   0.002   2.160
+    ##   0.008   0.002   2.176
 
 ## SQL
 
@@ -183,7 +183,7 @@ dbWriteTable(con, "category", category)
 When you write a new chunk, remember to replace the r with sql,
 connection=con. Some of these questions will reqruire you to use an
 inner join. Read more about them here
-(<https://www.w3schools.com/sql/sql_join_inner.asp>)\[<https://www.w3schools.com/sql/sql_join_inner.asp>\]
+<https://www.w3schools.com/sql/sql_join_inner.asp>
 
 ### Question 1
 
