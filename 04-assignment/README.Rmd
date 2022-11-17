@@ -20,8 +20,6 @@ library(DBI)
 ```
 
 
-The learning objectives are to conduct data scraping and perform text mining.
-
 ## HPC
 
 ### Problem 1: Make sure your code is nice
@@ -71,13 +69,14 @@ mb1 <- microbenchmark::microbenchmark(
   fun1alt(dat), check = "equivalent"
 )
 
-summary(mb1, unit = "relative")
-
 # Test for the second
 mb2 <- microbenchmark::microbenchmark(
   fun2(dat),
   fun2alt(dat), check = "equivalent"
 )
+
+
+summary(mb1, unit = "relative")
 
 summary(mb2, unit = "relative")
 ```
@@ -113,8 +112,8 @@ system.time({
 Rewrite the previous code using `parLapply()` to make it run faster. Make sure you set the seed using `clusterSetRNGStream()`:
 
 ```{r parallelize previous code}
-n.cores <- detectCores()/2 
-cl <- makePSOCKcluster(n.cores) # give half of the detected cores to the cluster
+n.cores <- detectCores() 
+cl <- makePSOCKcluster(n.cores) 
 
 clusterSetRNGStream(cl, 1231) # set seed
 
@@ -204,8 +203,8 @@ GROUP BY fc.category_id
 
 ### Question 4
 Incorporate table category into the answer to the previous question to find the name of the most popular category.
-```{sql connection=con,eval=FALSE}
-SELECT fc.category_id, c.name category, COUNT(*) num_films
+```{sql connection=con}
+SELECT fc.category_id, c.name category, COUNT(*) AS num_films
 FROM film_category fc
 JOIN film f
 ON fc.film_id = f.film_id
@@ -213,7 +212,11 @@ LEFT JOIN category c
 ON fc.category_id = c.category_id
 GROUP BY fc.category_id
 ORDER BY num_films DESC
+
+
 ```
+
+
 
 
 ```{r disconnect from connection}

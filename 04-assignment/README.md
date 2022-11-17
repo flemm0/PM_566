@@ -1,7 +1,7 @@
 Assignment 04: HPC and SQL
 ================
 Flemming Wu
-2022-11-11
+2022-11-17
 
 ``` r
 library(microbenchmark)
@@ -9,9 +9,6 @@ library(parallel)
 library(RSQLite)
 library(DBI)
 ```
-
-The learning objectives are to conduct data scraping and perform text
-mining.
 
 ## HPC
 
@@ -61,24 +58,25 @@ dat <- matrix(rnorm(200 * 100), nrow = 200)
 mb1 <- microbenchmark::microbenchmark(fun1(dat), fun1alt(dat),
     check = "equivalent")
 
-summary(mb1, unit = "relative")
-```
-
-    ##           expr      min       lq    mean   median       uq      max neval
-    ## 1    fun1(dat) 8.818385 10.39966 8.45405 10.29185 10.42869 1.151231   100
-    ## 2 fun1alt(dat) 1.000000  1.00000 1.00000  1.00000  1.00000 1.000000   100
-
-``` r
 # Test for the second
 mb2 <- microbenchmark::microbenchmark(fun2(dat), fun2alt(dat),
     check = "equivalent")
 
+
+summary(mb1, unit = "relative")
+```
+
+    ##           expr      min       lq     mean   median       uq       max neval
+    ## 1    fun1(dat) 8.273434 10.83372 8.273598 10.74167 10.26966 0.7036185   100
+    ## 2 fun1alt(dat) 1.000000  1.00000 1.000000  1.00000  1.00000 1.0000000   100
+
+``` r
 summary(mb2, unit = "relative")
 ```
 
-    ##           expr      min       lq    mean   median      uq      max neval
-    ## 1    fun2(dat) 4.151755 3.010849 2.72494 2.648056 2.63657 4.838463   100
-    ## 2 fun2alt(dat) 1.000000 1.000000 1.00000 1.000000 1.00000 1.000000   100
+    ##           expr      min      lq     mean   median       uq       max neval
+    ## 1    fun2(dat) 4.444672 2.50878 1.843788 2.506481 1.887776 0.3278704   100
+    ## 2 fun2alt(dat) 1.000000 1.00000 1.000000 1.000000 1.000000 1.0000000   100
 
 The last argument, check = “equivalent”, is included to make sure that
 the functions return the same result.
@@ -116,14 +114,14 @@ system.time({
     ## [1] 3.14124
 
     ##    user  system elapsed 
-    ##   4.344   0.973   5.369
+    ##   4.514   1.122   5.705
 
 Rewrite the previous code using `parLapply()` to make it run faster.
 Make sure you set the seed using `clusterSetRNGStream()`:
 
 ``` r
-n.cores <- detectCores()/2
-cl <- makePSOCKcluster(n.cores)  # give half of the detected cores to the cluster
+n.cores <- detectCores()
+cl <- makePSOCKcluster(n.cores)
 
 clusterSetRNGStream(cl, 1231)  # set seed
 
@@ -133,10 +131,16 @@ clusterEvalQ(cl, {
 ```
 
     ## [[1]]
-    ## [1] "Hello from process #33766"
+    ## [1] "Hello from process #27768"
     ## 
     ## [[2]]
-    ## [1] "Hello from process #33765"
+    ## [1] "Hello from process #27769"
+    ## 
+    ## [[3]]
+    ## [1] "Hello from process #27770"
+    ## 
+    ## [[4]]
+    ## [1] "Hello from process #27767"
 
 ``` r
 system.time({
@@ -147,10 +151,10 @@ system.time({
 })
 ```
 
-    ## [1] 3.141577
+    ## [1] 3.141578
 
     ##    user  system elapsed 
-    ##   0.005   0.001   2.767
+    ##   0.008   0.002   2.160
 
 ## SQL
 
@@ -269,7 +273,7 @@ Incorporate table category into the answer to the previous question to
 find the name of the most popular category.
 
 ``` sql
-SELECT fc.category_id, c.name category, COUNT(*) num_films
+SELECT fc.category_id, c.name category, COUNT(*) AS num_films
 FROM film_category fc
 JOIN film f
 ON fc.film_id = f.film_id
@@ -278,6 +282,21 @@ ON fc.category_id = c.category_id
 GROUP BY fc.category_id
 ORDER BY num_films DESC
 ```
+
+| category_id | category    | num_films |
+|------------:|:------------|----------:|
+|          15 | Sports      |        74 |
+|           9 | Foreign     |        73 |
+|           8 | Family      |        69 |
+|           6 | Documentary |        68 |
+|           2 | Animation   |        66 |
+|           1 | Action      |        64 |
+|          13 | New         |        63 |
+|           7 | Drama       |        62 |
+|          14 | Sci-Fi      |        61 |
+|          10 | Games       |        61 |
+
+Displaying records 1 - 10
 
 ``` r
 dbDisconnect(con)
